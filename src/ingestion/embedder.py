@@ -118,6 +118,7 @@ def ingest_video(url: str, title: str | None = None) -> dict:
     summary = {
         "video_id": chunks[0]["metadata"]["video_id"],
         "title": chunks[0]["metadata"]["title"],
+        "channel": chunks[0]["metadata"].get("channel", "Unknown channel"),
         "url": url,
         "chunk_count": len(chunks),
         "vectors_upserted": vectors_upserted,

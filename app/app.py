@@ -32,6 +32,50 @@ if "messages" not in st.session_state:
 if "ingested_videos" not in st.session_state:
     st.session_state.ingested_videos = []
 
+
+def _run_agent(prompt: str) -> str:
+    """Run the agent with knowledge base context injected."""
+    kb_context = ""
+    if st.session_state.ingested_videos:
+        video_list = "\n".join(
+            f"- \"{v['title']}\" by {v.get('channel', 'Unknown')} ({v['url']})"
+            for v in st.session_state.ingested_videos
+        )
+        kb_context = (
+            f"[Knowledge base contains these videos:\n{video_list}\n"
+            "Use query_corpus to search their transcripts. "
+            "Always cite the video title, channel name, and URL in your answer.]\n\n"
+        )
+    return st.session_state.agent.invoke(
+        {"input": kb_context + prompt}
+    ).get("output", "No response generated.")
+
+
+def _auto_summary(summary: dict) -> str:
+    """Generate an automatic analysis of a freshly ingested video."""
+    title = summary["title"]
+    channel = summary.get("channel", "Unknown")
+    url = summary["url"]
+
+    prompt = (
+        f'I just ingested the video "{title}" by {channel} ({url}). '
+        "Please analyse it by doing the following:\n"
+        "1. Use query_corpus to retrieve transcript content from this specific video.\n"
+        "2. Use check_compliance on the retrieved content to check for EU healthcare advertising violations.\n"
+        "3. Provide a structured summary with these sections:\n\n"
+        f"**Video:** {title} by {channel}\n"
+        f"**URL:** {url}\n\n"
+        "**Compliance:** Are there any compliance issues? List any flagged phrases.\n\n"
+        "**Narrative structure:** What is the story arc? (e.g. problem → journey → solution, "
+        "before/after, testimonial, educational)\n\n"
+        "**Brand fit:** Based on the content and tone, is this creator a good fit for a "
+        "prescription skincare brand? Any concerns?\n\n"
+        "**Key quotes:** Pull 2-3 notable quotes from the transcript.\n\n"
+        "Keep it concise and actionable."
+    )
+    return _run_agent(prompt)
+
+
 # ── Sidebar ──────────────────────────────────────────────────────────────────
 with st.sidebar:
     st.markdown("### Ingest a video")
@@ -46,12 +90,26 @@ with st.sidebar:
                     summary = ingest_video(url_input, title_input or None)
                     st.session_state.ingested_videos.append(summary)
                     st.success(
-                        f"Ingested **{summary['title']}** — "
-                        f"{summary['chunk_count']} chunks, "
-                        f"{summary['vectors_upserted']} vectors"
+                        f"Ingested **{summary['title']}** "
+                        f"by **{summary.get('channel', 'Unknown')}** — "
+                        f"{summary['chunk_count']} chunks"
                     )
                 except Exception as e:
                     st.error(f"Ingestion failed: {e}")
+                    summary = None
+
+            # Auto-summary after successful ingestion
+            if summary:
+                with st.spinner("Analysing video..."):
+                    try:
+                        analysis = _auto_summary(summary)
+                        st.session_state.messages.append({
+                            "role": "assistant",
+                            "content": analysis,
+                        })
+                        st.rerun()
+                    except Exception as e:
+                        logger.error(f"Auto-summary failed: {e}")
         else:
             st.warning("Please enter a YouTube URL.")
 
@@ -59,14 +117,15 @@ with st.sidebar:
         st.markdown("---")
         st.markdown("### Knowledge base")
         for v in st.session_state.ingested_videos:
+            channel = v.get("channel", "Unknown")
             st.markdown(
-                f"- **{v['title']}** — {v['chunk_count']} chunks  \n"
-                f"  `{v['url']}`"
+                f"- **{v['title']}** by *{channel}*  \n"
+                f"  {v['chunk_count']} chunks · `{v['url']}`"
             )
 
 # ── Main chat area ───────────────────────────────────────────────────────────
 st.markdown("## Creative Intelligence Copilot")
-st.caption("Ask about hooks, narrative structure, compliance, and content patterns across your ingested videos.")
+st.caption("Ingest a YouTube video to get an automatic compliance, narrative, and brand-fit analysis — then ask follow-up questions.")
 
 # Chat history display
 for msg in st.session_state.messages:
@@ -88,22 +147,7 @@ if user_input := st.chat_input("Ask a question about your content..."):
     with st.chat_message("assistant"):
         with st.spinner("Thinking..."):
             try:
-                # Inject knowledge base context so the agent knows what's been ingested
-                kb_context = ""
-                if st.session_state.ingested_videos:
-                    video_list = "\n".join(
-                        f"- \"{v['title']}\" ({v['url']}, {v['chunk_count']} chunks)"
-                        for v in st.session_state.ingested_videos
-                    )
-                    kb_context = (
-                        f"\n\n[Knowledge base contains these videos:\n{video_list}\n"
-                        "Use query_corpus to search their transcripts before answering. "
-                        "Use check_compliance to verify any claims found.]\n\n"
-                    )
-
-                enriched_input = kb_context + user_input if kb_context else user_input
-                response = st.session_state.agent.invoke({"input": enriched_input})
-                answer = response.get("output", "No response generated.")
+                answer = _run_agent(user_input)
             except Exception as e:
                 answer = f"Error: {e}"
                 logger.error(f"Agent error: {e}")

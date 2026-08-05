@@ -8,6 +8,7 @@ Used by notebook 01 and the ingest_video agent tool.
 from __future__ import annotations
 
 import re
+import urllib.request
 from typing import Optional
 from urllib.parse import urlparse, parse_qs
 
@@ -40,6 +41,26 @@ def extract_video_id(url: str) -> str:
             return qs["v"][0]
 
     raise ValueError(f"Could not extract video ID from URL: {url}")
+
+
+def fetch_video_info(video_id: str) -> dict:
+    """Fetch video title and channel name from YouTube page metadata."""
+    url = f"https://www.youtube.com/watch?v={video_id}"
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            html = resp.read().decode("utf-8", errors="ignore")
+
+        title_match = re.search(r'"title":"(.*?)"', html)
+        channel_match = re.search(r'"ownerChannelName":"(.*?)"', html)
+
+        return {
+            "video_title": title_match.group(1) if title_match else video_id,
+            "channel": channel_match.group(1) if channel_match else "Unknown channel",
+        }
+    except Exception as e:
+        logger.warning(f"Could not fetch video info for {video_id}: {e}")
+        return {"video_title": video_id, "channel": "Unknown channel"}
 
 
 def fetch_transcript(video_id: str, languages: list[str] | None = None) -> str:
@@ -134,12 +155,14 @@ def process_video(url: str, title: Optional[str] = None) -> list[dict]:
         List of chunk dicts ready for embedding and upsert.
     """
     video_id = extract_video_id(url)
+    video_info = fetch_video_info(video_id)
     transcript = fetch_transcript(video_id)
 
     metadata = {
         "video_id": video_id,
         "url": url,
-        "title": title or video_id,
+        "title": title or video_info["video_title"],
+        "channel": video_info["channel"],
         "char_count": len(transcript),
     }
 
