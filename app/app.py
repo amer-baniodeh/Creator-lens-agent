@@ -5,6 +5,11 @@ Streamlit UI for the Creative Intelligence Copilot.
 Run with: streamlit run app/app.py
 """
 
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
 import streamlit as st
 
 from src.agent.agent import get_agent
