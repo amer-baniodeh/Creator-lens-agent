@@ -102,6 +102,35 @@ def upsert_chunks(chunks: list[dict]) -> int:
     return total_upserted
 
 
+def ingest_transcript(text: str, title: str, channel: str = "Unknown", url: str = "") -> dict:
+    """
+    Ingest a raw transcript string (no YouTube API call).
+    Used when YouTube blocks cloud IPs.
+    """
+    import hashlib
+    from src.ingestion.transcript import chunk_transcript
+
+    video_id = hashlib.md5(text[:200].encode()).hexdigest()[:11]
+    metadata = {
+        "video_id": video_id,
+        "url": url,
+        "title": title,
+        "channel": channel,
+        "char_count": len(text),
+    }
+    chunks = chunk_transcript(text, metadata)
+    vectors_upserted = upsert_chunks(chunks)
+
+    return {
+        "video_id": video_id,
+        "title": title,
+        "channel": channel,
+        "url": url,
+        "chunk_count": len(chunks),
+        "vectors_upserted": vectors_upserted,
+    }
+
+
 def ingest_video(url: str, title: str | None = None) -> dict:
     """
     Full ingestion pipeline: URL → transcript → embed → Pinecone.
