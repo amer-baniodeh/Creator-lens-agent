@@ -38,7 +38,7 @@ def _run_agent(prompt: str) -> str:
     kb_context = ""
     if st.session_state.ingested_videos:
         video_list = "\n".join(
-            f"- \"{v['title']}\" by {v.get('channel', 'Unknown')} ({v.get('url', 'N/A')})"
+            f"- \"{v['title']}\" by {v.get('channel', 'Unknown')} ({v['url']})"
             for v in st.session_state.ingested_videos
         )
         kb_context = (
@@ -55,7 +55,7 @@ def _auto_summary(summary: dict) -> str:
     """Generate an automatic analysis of a freshly ingested video."""
     title = summary["title"]
     channel = summary.get("channel", "Unknown")
-    url = summary.get("url", "N/A")
+    url = summary["url"]
 
     prompt = (
         f'I just ingested the video "{title}" by {channel} ({url}). '
@@ -76,90 +76,51 @@ def _auto_summary(summary: dict) -> str:
     return _run_agent(prompt)
 
 
-def _handle_ingestion(summary: dict):
-    """Store ingestion result and run auto-summary."""
-    st.session_state.ingested_videos.append(summary)
-    st.success(
-        f"Ingested **{summary['title']}** "
-        f"by **{summary.get('channel', 'Unknown')}** — "
-        f"{summary['chunk_count']} chunks"
-    )
-    with st.spinner("Analysing video for compliance, narrative & brand fit..."):
-        try:
-            analysis = _auto_summary(summary)
-            st.session_state.messages.append({
-                "role": "assistant",
-                "content": analysis,
-            })
-            st.rerun()
-        except Exception as e:
-            logger.error(f"Auto-summary failed: {e}")
-
-
 # ── Sidebar ──────────────────────────────────────────────────────────────────
 with st.sidebar:
-    st.markdown("### Add content")
+    st.markdown("### Ingest a video")
+    url_input = st.text_input("YouTube URL", placeholder="https://youtube.com/watch?v=...")
+    title_input = st.text_input("Title (optional)", placeholder="Formel Skin — Patient Story")
 
-    ingest_tab, paste_tab = st.tabs(["YouTube URL", "Paste transcript"])
+    if st.button("Ingest", use_container_width=True):
+        if url_input:
+            with st.spinner("Fetching transcript and uploading to Pinecone..."):
+                try:
+                    from src.ingestion.embedder import ingest_video
+                    summary = ingest_video(url_input, title_input or None)
+                    st.session_state.ingested_videos.append(summary)
+                    st.success(
+                        f"Ingested **{summary['title']}** "
+                        f"by **{summary.get('channel', 'Unknown')}** — "
+                        f"{summary['chunk_count']} chunks"
+                    )
+                except Exception as e:
+                    st.error(f"Ingestion failed: {e}")
+                    summary = None
 
-    with ingest_tab:
-        url_input = st.text_input("YouTube URL", placeholder="https://youtube.com/watch?v=...")
-        url_title = st.text_input("Title (optional)", placeholder="Formel Skin — Patient Story", key="url_title")
-
-        if st.button("Ingest from YouTube", use_container_width=True):
-            if url_input:
-                with st.spinner("Fetching transcript and uploading to Pinecone..."):
+            # Auto-summary after successful ingestion
+            if summary:
+                with st.spinner("Analysing video..."):
                     try:
-                        from src.ingestion.embedder import ingest_video
-                        summary = ingest_video(url_input, url_title or None)
+                        analysis = _auto_summary(summary)
+                        st.session_state.messages.append({
+                            "role": "assistant",
+                            "content": analysis,
+                        })
+                        st.rerun()
                     except Exception as e:
-                        st.error(f"Ingestion failed: {e}")
-                        summary = None
-                if summary:
-                    _handle_ingestion(summary)
-            else:
-                st.warning("Please enter a YouTube URL.")
-
-    with paste_tab:
-        st.caption(
-            "YouTube blocks requests from cloud servers. "
-            "Paste the transcript here instead — copy it from YouTube's "
-            "\"Show transcript\" button on the video page."
-        )
-        paste_title = st.text_input("Video title", placeholder="Formel Skin — My Acne Journey", key="paste_title")
-        paste_channel = st.text_input("Channel name", placeholder="@SkinCareSarah", key="paste_channel")
-        paste_url = st.text_input("Video URL (optional)", placeholder="https://youtube.com/watch?v=...", key="paste_url")
-        paste_text = st.text_area("Transcript", placeholder="Paste the full transcript here...", height=200)
-
-        if st.button("Ingest transcript", use_container_width=True):
-            if paste_title and paste_text:
-                with st.spinner("Chunking and uploading to Pinecone..."):
-                    try:
-                        from src.ingestion.embedder import ingest_transcript
-                        summary = ingest_transcript(
-                            text=paste_text,
-                            title=paste_title,
-                            channel=paste_channel or "Unknown",
-                            url=paste_url or "",
-                        )
-                    except Exception as e:
-                        st.error(f"Ingestion failed: {e}")
-                        summary = None
-                if summary:
-                    _handle_ingestion(summary)
-            else:
-                st.warning("Please enter a title and paste the transcript.")
+                        logger.error(f"Auto-summary failed: {e}")
+        else:
+            st.warning("Please enter a YouTube URL.")
 
     if st.session_state.ingested_videos:
         st.markdown("---")
         st.markdown("### Knowledge base")
         for v in st.session_state.ingested_videos:
             channel = v.get("channel", "Unknown")
-            url = v.get("url", "")
-            url_line = f"  `{url}`" if url else ""
             st.markdown(
                 f"- **{v['title']}** by *{channel}*  \n"
-                f"  {v['chunk_count']} chunks{url_line}"
+                f"  {v['chunk_count']} chunks · `{v['url']}`"
             )
 
 # ── Main chat area ───────────────────────────────────────────────────────────
@@ -176,7 +137,7 @@ for msg in st.session_state.messages:
         else:
             st.markdown(msg["content"])
 
-# Chat input
+# Chat input (top-level — fixes the position bug)
 if user_input := st.chat_input("Ask a question about your content..."):
     st.session_state.messages.append({"role": "user", "content": user_input})
 
@@ -191,6 +152,7 @@ if user_input := st.chat_input("Ask a question about your content..."):
                 answer = f"Error: {e}"
                 logger.error(f"Agent error: {e}")
 
+        # Highlight compliance flags
         msg_data = {"role": "assistant", "content": answer}
         if "🚨" in answer or "Non-compliant" in answer:
             st.error(answer)
