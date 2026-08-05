@@ -27,8 +27,3 @@ python-dotenv>=1.0
 tiktoken>=0.7
 pydantic>=2.8
 tenacity>=8.5
-tf-keras>=2.21
-
-# ── Notebooks ─────────────────────────────────────────────────────────────────
-jupyter>=1.1
-ipykernel>=6.29
