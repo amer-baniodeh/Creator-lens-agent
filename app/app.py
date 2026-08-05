@@ -32,10 +32,8 @@ if "messages" not in st.session_state:
 if "ingested_videos" not in st.session_state:
     st.session_state.ingested_videos = []
 
-# ── Layout ────────────────────────────────────────────────────────────────────
-col_main, col_sidebar = st.columns([2, 1])
-
-with col_sidebar:
+# ── Sidebar ──────────────────────────────────────────────────────────────────
+with st.sidebar:
     st.markdown("### Ingest a video")
     url_input = st.text_input("YouTube URL", placeholder="https://youtube.com/watch?v=...")
     title_input = st.text_input("Title (optional)", placeholder="Formel Skin — Patient Story")
@@ -66,37 +64,59 @@ with col_sidebar:
                 f"  `{v['url']}`"
             )
 
-with col_main:
-    st.markdown("## Creative Intelligence Copilot")
-    st.caption("Ask about hooks, narrative structure, compliance, and content patterns across your ingested videos.")
+# ── Main chat area ───────────────────────────────────────────────────────────
+st.markdown("## Creative Intelligence Copilot")
+st.caption("Ask about hooks, narrative structure, compliance, and content patterns across your ingested videos.")
 
-    # Chat history display
-    for msg in st.session_state.messages:
-        with st.chat_message(msg["role"]):
+# Chat history display
+for msg in st.session_state.messages:
+    with st.chat_message(msg["role"]):
+        if msg.get("is_compliance_flag"):
+            st.error(msg["content"])
+        elif msg.get("is_compliance_pass"):
+            st.success(msg["content"])
+        else:
             st.markdown(msg["content"])
 
-    # Chat input
-    if user_input := st.chat_input("Ask a question about your content..."):
-        st.session_state.messages.append({"role": "user", "content": user_input})
+# Chat input (top-level — fixes the position bug)
+if user_input := st.chat_input("Ask a question about your content..."):
+    st.session_state.messages.append({"role": "user", "content": user_input})
 
-        with st.chat_message("user"):
-            st.markdown(user_input)
+    with st.chat_message("user"):
+        st.markdown(user_input)
 
-        with st.chat_message("assistant"):
-            with st.spinner("Thinking..."):
-                try:
-                    response = st.session_state.agent.invoke({"input": user_input})
-                    answer = response.get("output", "No response generated.")
-                except Exception as e:
-                    answer = f"Error: {e}"
-                    logger.error(f"Agent error: {e}")
+    with st.chat_message("assistant"):
+        with st.spinner("Thinking..."):
+            try:
+                # Inject knowledge base context so the agent knows what's been ingested
+                kb_context = ""
+                if st.session_state.ingested_videos:
+                    video_list = "\n".join(
+                        f"- \"{v['title']}\" ({v['url']}, {v['chunk_count']} chunks)"
+                        for v in st.session_state.ingested_videos
+                    )
+                    kb_context = (
+                        f"\n\n[Knowledge base contains these videos:\n{video_list}\n"
+                        "Use query_corpus to search their transcripts before answering. "
+                        "Use check_compliance to verify any claims found.]\n\n"
+                    )
 
-            # Highlight compliance flags in red
-            if "🚨" in answer or "Non-compliant" in answer:
-                st.error(answer)
-            elif "✅" in answer or "Compliant" in answer:
-                st.success(answer)
-            else:
-                st.markdown(answer)
+                enriched_input = kb_context + user_input if kb_context else user_input
+                response = st.session_state.agent.invoke({"input": enriched_input})
+                answer = response.get("output", "No response generated.")
+            except Exception as e:
+                answer = f"Error: {e}"
+                logger.error(f"Agent error: {e}")
 
-        st.session_state.messages.append({"role": "assistant", "content": answer})
+        # Highlight compliance flags
+        msg_data = {"role": "assistant", "content": answer}
+        if "🚨" in answer or "Non-compliant" in answer:
+            st.error(answer)
+            msg_data["is_compliance_flag"] = True
+        elif "✅" in answer or "Compliant" in answer:
+            st.success(answer)
+            msg_data["is_compliance_pass"] = True
+        else:
+            st.markdown(answer)
+
+    st.session_state.messages.append(msg_data)
