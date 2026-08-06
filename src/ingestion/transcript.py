@@ -15,42 +15,8 @@ from urllib.parse import urlparse, parse_qs
 from youtube_transcript_api import YouTubeTranscriptApi, NoTranscriptFound, TranscriptsDisabled
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
-from src.utils.config import (
-    CHUNK_SIZE,
-    CHUNK_OVERLAP,
-    WEBSHARE_PROXY_USERNAME,
-    WEBSHARE_PROXY_PASSWORD,
-    HTTP_PROXY,
-    HTTPS_PROXY,
-)
+from src.utils.config import CHUNK_SIZE, CHUNK_OVERLAP
 from src.utils.logger import logger
-
-
-def _build_transcript_api() -> YouTubeTranscriptApi:
-    """
-    Build a YouTubeTranscriptApi instance, optionally with a proxy.
-    YouTube blocks cloud provider IPs (AWS, GCP, Azure). If proxy env vars are
-    set, route requests through them so cloud deployments work.
-    """
-    if WEBSHARE_PROXY_USERNAME and WEBSHARE_PROXY_PASSWORD:
-        from youtube_transcript_api.proxies import WebshareProxyConfig
-        logger.info("Using Webshare proxy for YouTube transcript requests")
-        return YouTubeTranscriptApi(
-            proxy_config=WebshareProxyConfig(
-                proxy_username=WEBSHARE_PROXY_USERNAME,
-                proxy_password=WEBSHARE_PROXY_PASSWORD,
-            )
-        )
-    if HTTP_PROXY or HTTPS_PROXY:
-        from youtube_transcript_api.proxies import GenericProxyConfig
-        logger.info("Using generic HTTP proxy for YouTube transcript requests")
-        return YouTubeTranscriptApi(
-            proxy_config=GenericProxyConfig(
-                http_url=HTTP_PROXY or HTTPS_PROXY,
-                https_url=HTTPS_PROXY or HTTP_PROXY,
-            )
-        )
-    return YouTubeTranscriptApi()
 
 
 def extract_video_id(url: str) -> str:
@@ -113,7 +79,7 @@ def fetch_transcript(video_id: str, languages: list[str] | None = None) -> str:
         TranscriptsDisabled: If the video has transcripts disabled.
     """
     langs = languages or ["en", "de", "fr"]
-    api = _build_transcript_api()
+    api = YouTubeTranscriptApi()
 
     try:
         transcript_list = api.fetch(video_id, languages=langs)
