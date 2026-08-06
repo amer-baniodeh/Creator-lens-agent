@@ -7,6 +7,7 @@ Used by notebook 01 and the ingest_video agent tool.
 
 from __future__ import annotations
 
+import json
 import re
 import urllib.request
 from typing import Optional
@@ -51,12 +52,20 @@ def fetch_video_info(video_id: str) -> dict:
         with urllib.request.urlopen(req, timeout=10) as resp:
             html = resp.read().decode("utf-8", errors="ignore")
 
-        title_match = re.search(r'"title":"(.*?)"', html)
-        channel_match = re.search(r'"ownerChannelName":"(.*?)"', html)
+        def _extract(pattern: str, fallback: str) -> str:
+            m = re.search(pattern, html)
+            if not m:
+                return fallback
+            # The captured group is a raw JSON string body; wrap in quotes and
+            # let json.loads handle all escape sequences (&, \", \\, etc).
+            try:
+                return json.loads(f'"{m.group(1)}"')
+            except json.JSONDecodeError:
+                return m.group(1)
 
         return {
-            "video_title": title_match.group(1) if title_match else video_id,
-            "channel": channel_match.group(1) if channel_match else "Unknown channel",
+            "video_title": _extract(r'"title":"(.*?)"', video_id),
+            "channel": _extract(r'"ownerChannelName":"(.*?)"', "Unknown channel"),
         }
     except Exception as e:
         logger.warning(f"Could not fetch video info for {video_id}: {e}")
