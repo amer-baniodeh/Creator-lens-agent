@@ -50,3 +50,11 @@ LANGCHAIN_PROJECT: str = os.getenv("LANGCHAIN_PROJECT", "copilot-mvp")
 CHUNK_SIZE: int = int(os.getenv("CHUNK_SIZE", "500"))
 CHUNK_OVERLAP: int = int(os.getenv("CHUNK_OVERLAP", "50"))
 TOP_K_RESULTS: int = int(os.getenv("TOP_K_RESULTS", "5"))
+
+# ── YouTube proxy (needed on cloud IPs which YouTube blocks) ─────────────────
+# Option A — Webshare rotating residential proxy (recommended):
+WEBSHARE_PROXY_USERNAME: str = os.getenv("WEBSHARE_PROXY_USERNAME", "")
+WEBSHARE_PROXY_PASSWORD: str = os.getenv("WEBSHARE_PROXY_PASSWORD", "")
+# Option B — generic HTTP(S) proxy URLs:
+HTTP_PROXY: str = os.getenv("YT_HTTP_PROXY", "")
+HTTPS_PROXY: str = os.getenv("YT_HTTPS_PROXY", "")
