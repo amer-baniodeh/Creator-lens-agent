@@ -1,0 +1,217 @@
+{
+  "run_at": "2026-08-07T11:17:23.293549+00:00",
+  "n": 10,
+  "avg_faithfulness": 5.0,
+  "avg_correctness": 3.4,
+  "retrieval_hit_rate": 0.9,
+  "note": "Baseline run — first proper faithfulness+correctness split, grounded in real retrieved context.",
+  "predictions": [
+    {
+      "id": "rag_001",
+      "question": "What does the Formel Skin process involve before a customer receives their products?",
+      "expected_answer_criteria": "Should mention an online consultation/questionnaire about skin, concerns, and goals, and uploading photos, leading to a personalized recommendation.",
+      "expected_video_ids": [
+        "8Uf8HaUMmyk",
+        "3f1452a3788",
+        "DH2z3BkknSQ"
+      ],
+      "retrieved_video_ids": [
+        "3f1452a3788",
+        "DH2z3BkknSQ"
+      ],
+      "retrieval_hit": true,
+      "context": "[Source: Formel Skin review]\nIf you're interested in learning more about Formel Skin, you can check out the link in my video description to see how the consultation works and whether it's something that fits your skincare goals. You can take a look at the information, see what's available, and decide if it's right for you.\n\n---\n\n[Source: Neue Kooperation – FORMEL SKIN!]\nich darf euch heute endlich die Produkte von Formel Skin vorstellen der absolute Vorteil hier von am Anfang wird eine Hautanalyse gemacht und daraufhin bekommst du die perfekten Produkte für deine Haut es wird dir eine Routine erstellt für morgens und abends und du bekommst dein behandlungsset direkt nach Hause geschickt die wirkstoffforel ist personalisiert und wird regelmäßig entsprechend nach deinen hautbedürfnissen angepasst wenn du das ganze jetzt auch mal ausprobieren möchtest dann erhält\n\n---\n\n[Source: Formel Skin review]\nIf you've been following me for a while, you probably know that skincare has always been a bit of trial and error for me. I've tried so many different products over the years, and honestly, one of the hardest parts has been figuring out which products actually work well together and building a routine that I can stick to consistently. That's one of the reasons I was interested in trying Formel Skin.\n\n---\n\n[Source: Formel Skin review]\nThe process was actually really simple. I went through an online consultation where I answered questions about my skin, my concerns, and my goals. I also uploaded a few photos, and based on that information, I received a personalized skincare recommendation. I really liked that it wasn't just about picking random products from a huge catalog but about creating a routine that made sense for my skin.\n\n---\n\n[Source: Formel Skin review]\nHey everyone! Welcome back to the channel. I hope you're all doing amazing. If you're new here, my name is Alexa, and today I wanted to talk a little bit about my skincare routine because I've been getting so many questions about what I've been using lately. Before we get started, I want to let you know that this video is sponsored by Formel Skin, so thank you to them for supporting today's video.",
+      "answer": "The Formel Skin process involves an online consultation where the customer answers questions about their skin, concerns, and goals, and uploads a few photos. Based on this information, they receive a personalized skincare recommendation. This ensures that the products are tailored to the individual's skin needs before they receive their treatment set. (Source: Formel Skin review)",
+      "faithfulness_score": 5,
+      "unsupported_claims": [],
+      "faithfulness_reasoning": "The answer accurately reflects the process described in the context, including the online consultation and personalized skincare recommendation.",
+      "correctness_score": 5,
+      "correctness_reasoning": "The answer fully addresses the question by mentioning the online consultation, the questionnaire about skin concerns and goals, and the uploading of photos, leading to a personalized recommendation."
+    },
+    {
+      "id": "rag_002",
+      "question": "In the 'Formel Skin review' video, does the creator give any medical disclaimer?",
+      "expected_answer_criteria": "Yes — advises viewers with specific skin concerns or medical conditions to talk to a qualified healthcare professional.",
+      "expected_video_ids": [
+        "3f1452a3788"
+      ],
+      "retrieved_video_ids": [
+        "3f1452a3788",
+        "8Uf8HaUMmyk"
+      ],
+      "retrieval_hit": true,
+      "context": "[Source: Formel Skin review]\nIf you're interested in learning more about Formel Skin, you can check out the link in my video description to see how the consultation works and whether it's something that fits your skincare goals. You can take a look at the information, see what's available, and decide if it's right for you.\n\n---\n\n[Source: Formel Skin review]\nA big thank you again to Formel Skin for sponsoring today's video, and thank you all so much for watching. If you enjoyed this video, don't forget to leave a like, subscribe if you haven't already, and let me know in the comments what you'd like to see next. I'll see you all in the next one. Bye!\n\n---\n\n[Source: Formel Skin review]\nHey everyone! Welcome back to the channel. I hope you're all doing amazing. If you're new here, my name is Alexa, and today I wanted to talk a little bit about my skincare routine because I've been getting so many questions about what I've been using lately. Before we get started, I want to let you know that this video is sponsored by Formel Skin, so thank you to them for supporting today's video.\n\n---\n\n[Source: Formel Skin review]\nIf you've been following me for a while, you probably know that skincare has always been a bit of trial and error for me. I've tried so many different products over the years, and honestly, one of the hardest parts has been figuring out which products actually work well together and building a routine that I can stick to consistently. That's one of the reasons I was interested in trying Formel Skin.\n\n---\n\n[Source: TEST 44]\nman hat auf jeden fall vom gesamtbild deutlich besser geworden das sieht man hört aber nicht so machen ich mag ich habe gesehen was es mit meiner haut gemacht hat gibt es jetzt auch mal ein kleines update ich habe mich jetzt mal ein willkommen serum zu einem neuen video einem skincare blog deswegen stehe ich auch schon in baden ungewöhnlicher ort um ein video zu beginn noch komplett ungeschminkt aber ich dachte jemand mal ein bisschen mit auf eine neue es ging teilweise ich hatte ja schon mal",
+      "answer": "The provided excerpts from the 'Formel Skin review' do not include any mention of a medical disclaimer. Therefore, I cannot confirm if a medical disclaimer is given in that video.",
+      "faithfulness_score": 5,
+      "unsupported_claims": [],
+      "faithfulness_reasoning": "The answer accurately states that there is no mention of a medical disclaimer in the provided excerpts from the 'Formel Skin review'.",
+      "correctness_score": 1,
+      "correctness_reasoning": "The answer does not confirm the presence of a medical disclaimer, which is essential to meet the criteria."
+    },
+    {
+      "id": "rag_003",
+      "question": "What date does the creator in 'TEST 44' mention starting this part of her skincare journey?",
+      "expected_answer_criteria": "October 14th (14. Oktober).",
+      "expected_video_ids": [
+        "8Uf8HaUMmyk"
+      ],
+      "retrieved_video_ids": [
+        "3f1452a3788"
+      ],
+      "retrieval_hit": false,
+      "context": "[Source: Formel Skin review]\nIf you've been following me for a while, you probably know that skincare has always been a bit of trial and error for me. I've tried so many different products over the years, and honestly, one of the hardest parts has been figuring out which products actually work well together and building a routine that I can stick to consistently. That's one of the reasons I was interested in trying Formel Skin.\n\n---\n\n[Source: Formel Skin review]\nThe process was actually really simple. I went through an online consultation where I answered questions about my skin, my concerns, and my goals. I also uploaded a few photos, and based on that information, I received a personalized skincare recommendation. I really liked that it wasn't just about picking random products from a huge catalog but about creating a routine that made sense for my skin.\n\n---\n\n[Source: Formel Skin review]\nHey everyone! Welcome back to the channel. I hope you're all doing amazing. If you're new here, my name is Alexa, and today I wanted to talk a little bit about my skincare routine because I've been getting so many questions about what I've been using lately. Before we get started, I want to let you know that this video is sponsored by Formel Skin, so thank you to them for supporting today's video.\n\n---\n\n[Source: Formel Skin review]\nI've been following the routine as recommended, and one thing I've really appreciated is how straightforward it is. Everything comes with clear instructions, so I don't have to wonder which product I'm supposed to use or when I should be using it. Having that kind of structure has honestly made it much easier for me to stay consistent with my skincare, and I think consistency is one of the biggest factors when you're trying to build healthy skincare habits.\n\n---\n\n[Source: Formel Skin review]\nIf you're interested in learning more about Formel Skin, you can check out the link in my video description to see how the consultation works and whether it's something that fits your skincare goals. You can take a look at the information, see what's available, and decide if it's right for you.",
+      "answer": "The information regarding the date the creator in 'TEST 44' mentions starting this part of her skincare journey is not provided in the transcript excerpts.",
+      "faithfulness_score": 5,
+      "unsupported_claims": [],
+      "faithfulness_reasoning": "The answer accurately states that the date the creator started this part of her skincare journey is not provided in the context, which is supported by the excerpts.",
+      "correctness_score": 1,
+      "correctness_reasoning": "The answer does not provide the specific date requested in the question."
+    },
+    {
+      "id": "rag_004",
+      "question": "According to 'FORMEL Skin Erfahrungen', how long has the creator been using the product?",
+      "expected_answer_criteria": "About one year.",
+      "expected_video_ids": [
+        "G9C2J_QuyDQ"
+      ],
+      "retrieved_video_ids": [
+        "3f1452a3788",
+        "DH2z3BkknSQ",
+        "G9C2J_QuyDQ"
+      ],
+      "retrieval_hit": true,
+      "context": "[Source: Formel Skin review]\nIf you've been following me for a while, you probably know that skincare has always been a bit of trial and error for me. I've tried so many different products over the years, and honestly, one of the hardest parts has been figuring out which products actually work well together and building a routine that I can stick to consistently. That's one of the reasons I was interested in trying Formel Skin.\n\n---\n\n[Source: Formel Skin review]\nIf you're interested in learning more about Formel Skin, you can check out the link in my video description to see how the consultation works and whether it's something that fits your skincare goals. You can take a look at the information, see what's available, and decide if it's right for you.\n\n---\n\n[Source: Neue Kooperation – FORMEL SKIN!]\nich darf euch heute endlich die Produkte von Formel Skin vorstellen der absolute Vorteil hier von am Anfang wird eine Hautanalyse gemacht und daraufhin bekommst du die perfekten Produkte für deine Haut es wird dir eine Routine erstellt für morgens und abends und du bekommst dein behandlungsset direkt nach Hause geschickt die wirkstoffforel ist personalisiert und wird regelmäßig entsprechend nach deinen hautbedürfnissen angepasst wenn du das ganze jetzt auch mal ausprobieren möchtest dann erhält\n\n---\n\n[Source: FORMEL Skin Erfahrungen]\nich bin extrem begeistert also wirklich begeistert vor allem weil ich super sensible Haut habe und jahrelang auf der Suche nach einem Produkt warum ich meine Haut in Griff bekommen kann jedoch leider erfolglos bis ich auch Pommes gegen gestoßen bin und das war für mich die beste Entscheidung die ich nur zu formen Skin jetzt schon seit einem Jahr es hat mich überzeugt weil es das einzige was mir geholfen hat mit meiner Haut nicht wiederholen aber es gehen jetzt meine Haut so viel besser gemacht\n\n---\n\n[Source: Formel Skin review]\nHey everyone! Welcome back to the channel. I hope you're all doing amazing. If you're new here, my name is Alexa, and today I wanted to talk a little bit about my skincare routine because I've been getting so many questions about what I've been using lately. Before we get started, I want to let you know that this video is sponsored by Formel Skin, so thank you to them for supporting today's video.",
+      "answer": "According to 'FORMEL Skin Erfahrungen', the creator has been using the product for one year.",
+      "faithfulness_score": 5,
+      "unsupported_claims": [],
+      "faithfulness_reasoning": "The answer accurately reflects the information provided in the context, specifically from 'FORMEL Skin Erfahrungen' where it states the creator has been using the product for one year.",
+      "correctness_score": 5,
+      "correctness_reasoning": "The answer directly states that the creator has been using the product for one year, which fully satisfies the criteria."
+    },
+    {
+      "id": "rag_005",
+      "question": "In the 'test 3' video, what habit gets rated 0 out of 10?",
+      "expected_answer_criteria": "Putting toothpaste on pimples (Zahnpasta auf Pickel schmieren) is rated 0/10. Not using sunscreen out of fear of breakouts is also rated 0/10 — either is an acceptable correct answer.",
+      "expected_video_ids": [
+        "ACTsF3JxOhk"
+      ],
+      "retrieved_video_ids": [
+        "3f1452a3788",
+        "8Uf8HaUMmyk",
+        "ACTsF3JxOhk"
+      ],
+      "retrieval_hit": true,
+      "context": "[Source: test 3]\ndermatologinnenreiting täglich Haare waschen 5 von 10 abends immer Abschminken zehn von zehn direkt Pickel abdecken wenn sich was anbahnt acht von zehn nach dem Duschen nicht eincremen vier von zehn Zahnpasta auf Pickel schmieren Null von zehn Pickel ausdrücken sechs von zehn keine Sonnencreme benutzen aus Angst vor Unreinheiten 0 von 10\n\n---\n\n[Source: TEST 44]\nvielen verbrauchern bewusst und alles ich habe vor einer woche waren es glaube ich online test machen müssen also nehme ich einfach fragen über mich beantwortet habe und dann auch bilder hochgeladen habe am meisten frontseite seite da stecken wir mich haut ärztinnen dahinter die das dann durchchecken quasi und daraufhin wird dann eine eigene flüge zusammen gestellt sieht das ganze jetzt aus gab hier eine broschüre zur anwendung produkte die ich nutzen werde er einmal die reinigung für morgens\n\n---\n\n[Source: Formel Skin review]\nI've been following the routine as recommended, and one thing I've really appreciated is how straightforward it is. Everything comes with clear instructions, so I don't have to wonder which product I'm supposed to use or when I should be using it. Having that kind of structure has honestly made it much easier for me to stay consistent with my skincare, and I think consistency is one of the biggest factors when you're trying to build healthy skincare habits.\n\n---\n\n[Source: TEST 44]\ndavon habe ich auch einige bahnen jedenfalls habe ich seine positives von formel 1 gehört und ich sage es direkt dazu dass es jetzt in kooperation dass ich das wir testen kann mit euch gemeinsam allerdings war ich trotzdem meine ehrliche meinung sagen bzw werde ich euch auch einfach dabei mitnehmen also ihr seht ob sich was verändern wird oder nicht wir haben heute den 14 oktober keine deswegen steht um diese uhrzeit im bad und machen skin care bei vielen verbrauchern bewusst und alles ich habe\n\n---\n\n[Source: Formel Skin review]\nA big thank you again to Formel Skin for sponsoring today's video, and thank you all so much for watching. If you enjoyed this video, don't forget to leave a like, subscribe if you haven't already, and let me know in the comments what you'd like to see next. I'll see you all in the next one. Bye!",
+      "answer": "In the 'test 3' video, the habit of using no sunscreen out of fear of impurities is rated 0 out of 10.",
+      "faithfulness_score": 5,
+      "unsupported_claims": [],
+      "faithfulness_reasoning": "The answer accurately reflects the information provided in 'test 3' regarding the rating of using no sunscreen.",
+      "correctness_score": 5,
+      "correctness_reasoning": "The answer correctly identifies that not using sunscreen out of fear of breakouts is rated 0 out of 10, which meets the criteria."
+    },
+    {
+      "id": "rag_006",
+      "question": "Is a discount code or promotion mentioned in any of the videos? If so, which one?",
+      "expected_answer_criteria": "Yes — 'Neue Kooperation – FORMEL SKIN!' mentions a discount voucher/code.",
+      "expected_video_ids": [
+        "DH2z3BkknSQ"
+      ],
+      "retrieved_video_ids": [
+        "3f1452a3788",
+        "8Uf8HaUMmyk",
+        "DH2z3BkknSQ"
+      ],
+      "retrieval_hit": true,
+      "context": "[Source: Formel Skin review]\nA big thank you again to Formel Skin for sponsoring today's video, and thank you all so much for watching. If you enjoyed this video, don't forget to leave a like, subscribe if you haven't already, and let me know in the comments what you'd like to see next. I'll see you all in the next one. Bye!\n\n---\n\n[Source: TEST 44]\nhab noch nicht alles komplett aufgebraucht wird das natürlich erstmal aufbrauchen bevor ich was neues anfangen und ja also wie gesagt ihr habt die möglichkeit dass jederzeit pausieren finde ich richtig gut und eventuell habe ich euch das schon eingeblendet aber ich habe auch einen rabattcode für euch was mich sehr freut wenn ich da ein bisschen sparen könnt durch mich und zwar 20 prozent auf euren ersten und den zweiten monat steht alles auch noch mal in der infobox ich verlinke euch das alles\n\n---\n\n[Source: Formel Skin review]\nHey everyone! Welcome back to the channel. I hope you're all doing amazing. If you're new here, my name is Alexa, and today I wanted to talk a little bit about my skincare routine because I've been getting so many questions about what I've been using lately. Before we get started, I want to let you know that this video is sponsored by Formel Skin, so thank you to them for supporting today's video.\n\n---\n\n[Source: Formel Skin review]\nIf you're interested in learning more about Formel Skin, you can check out the link in my video description to see how the consultation works and whether it's something that fits your skincare goals. You can take a look at the information, see what's available, and decide if it's right for you.\n\n---\n\n[Source: Neue Kooperation – FORMEL SKIN!]\njetzt auch mal ausprobieren möchtest dann erhält du von uns eine 40% Rabattgutschein auf den ersten und zweiten Behandlungsmonat tu deineer Haut etwas Gutes und probier es aus",
+      "answer": "Yes, a discount code is mentioned in the video \"TEST 44,\" where it states that there is a 20% discount on the first and second month. Additionally, in the video \"Neue Kooperation – FORMEL SKIN!,\" a 40% discount voucher for the first and second treatment month is mentioned.",
+      "faithfulness_score": 5,
+      "unsupported_claims": [],
+      "faithfulness_reasoning": "All claims in the answer are supported by the provided context.",
+      "correctness_score": 2,
+      "correctness_reasoning": "The answer correctly identifies a discount code in one video but fails to accurately state that the specific video mentioned in the criteria is 'Neue Kooperation – FORMEL SKIN!'."
+    },
+    {
+      "id": "rag_007",
+      "question": "What kind of skin does the creator in 'FORMEL Skin Erfahrungen' describe having?",
+      "expected_answer_criteria": "Sensitive skin (sensible Haut), and mentions years of unsuccessfully searching for a product that worked.",
+      "expected_video_ids": [
+        "G9C2J_QuyDQ"
+      ],
+      "retrieved_video_ids": [
+        "3f1452a3788",
+        "DH2z3BkknSQ",
+        "G9C2J_QuyDQ"
+      ],
+      "retrieval_hit": true,
+      "context": "[Source: Formel Skin review]\nIf you're interested in learning more about Formel Skin, you can check out the link in my video description to see how the consultation works and whether it's something that fits your skincare goals. You can take a look at the information, see what's available, and decide if it's right for you.\n\n---\n\n[Source: Formel Skin review]\nIf you've been following me for a while, you probably know that skincare has always been a bit of trial and error for me. I've tried so many different products over the years, and honestly, one of the hardest parts has been figuring out which products actually work well together and building a routine that I can stick to consistently. That's one of the reasons I was interested in trying Formel Skin.\n\n---\n\n[Source: Neue Kooperation – FORMEL SKIN!]\nich darf euch heute endlich die Produkte von Formel Skin vorstellen der absolute Vorteil hier von am Anfang wird eine Hautanalyse gemacht und daraufhin bekommst du die perfekten Produkte für deine Haut es wird dir eine Routine erstellt für morgens und abends und du bekommst dein behandlungsset direkt nach Hause geschickt die wirkstoffforel ist personalisiert und wird regelmäßig entsprechend nach deinen hautbedürfnissen angepasst wenn du das ganze jetzt auch mal ausprobieren möchtest dann erhält\n\n---\n\n[Source: FORMEL Skin Erfahrungen]\nich bin extrem begeistert also wirklich begeistert vor allem weil ich super sensible Haut habe und jahrelang auf der Suche nach einem Produkt warum ich meine Haut in Griff bekommen kann jedoch leider erfolglos bis ich auch Pommes gegen gestoßen bin und das war für mich die beste Entscheidung die ich nur zu formen Skin jetzt schon seit einem Jahr es hat mich überzeugt weil es das einzige was mir geholfen hat mit meiner Haut nicht wiederholen aber es gehen jetzt meine Haut so viel besser gemacht\n\n---\n\n[Source: Formel Skin review]\nThe process was actually really simple. I went through an online consultation where I answered questions about my skin, my concerns, and my goals. I also uploaded a few photos, and based on that information, I received a personalized skincare recommendation. I really liked that it wasn't just about picking random products from a huge catalog but about creating a routine that made sense for my skin.",
+      "answer": "The creator in 'FORMEL Skin Erfahrungen' describes having super sensitive skin. They mention being on a long search for a product that could help manage their skin, which they found with Formel Skin. (Source: FORMEL Skin Erfahrungen)",
+      "faithfulness_score": 5,
+      "unsupported_claims": [],
+      "faithfulness_reasoning": "The answer accurately reflects the information provided in the context regarding the creator's experience with sensitive skin and their search for an effective product.",
+      "correctness_score": 4,
+      "correctness_reasoning": "The answer correctly identifies the creator as having sensitive skin and mentions a long search for a product, but does not specify the years of searching."
+    },
+    {
+      "id": "rag_008",
+      "question": "Does the creator in 'TEST 44' say her skin has fully cleared up, or does she mention any remaining problem areas?",
+      "expected_answer_criteria": "She says the overall picture has improved, but explicitly mentions remaining problem areas (e.g. around the chin) — not a claim of complete clearing.",
+      "expected_video_ids": [
+        "8Uf8HaUMmyk"
+      ],
+      "retrieved_video_ids": [
+        "3f1452a3788",
+        "8Uf8HaUMmyk"
+      ],
+      "retrieval_hit": true,
+      "context": "[Source: TEST 44]\nneue es ging teilweise ich hatte ja schon mal eine hauptfeld video gemacht und es ist auf jeden fall wenn euch das anschaut wie ich da teilweise aus dieser szene hat auf jeden fall vom gesamtbild deutlich besser geworden ich sehe es als meine haut trotzdem immer noch solche stellen wie beispielsweise hier hat am kinn eben hier da ist auch noch ein bisschen problemzone hier in dem bereich geboren also ich hab halt nie so komplett reine haut abgesehen davon habe ich auch einige bahnen jedenfalls\n\n---\n\n[Source: TEST 44]\nman hat auf jeden fall vom gesamtbild deutlich besser geworden das sieht man hört aber nicht so machen ich mag ich habe gesehen was es mit meiner haut gemacht hat gibt es jetzt auch mal ein kleines update ich habe mich jetzt mal ein willkommen serum zu einem neuen video einem skincare blog deswegen stehe ich auch schon in baden ungewöhnlicher ort um ein video zu beginn noch komplett ungeschminkt aber ich dachte jemand mal ein bisschen mit auf eine neue es ging teilweise ich hatte ja schon mal\n\n---\n\n[Source: Formel Skin review]\nThe process was actually really simple. I went through an online consultation where I answered questions about my skin, my concerns, and my goals. I also uploaded a few photos, and based on that information, I received a personalized skincare recommendation. I really liked that it wasn't just about picking random products from a huge catalog but about creating a routine that made sense for my skin.\n\n---\n\n[Source: Formel Skin review]\nIf you've been following me for a while, you probably know that skincare has always been a bit of trial and error for me. I've tried so many different products over the years, and honestly, one of the hardest parts has been figuring out which products actually work well together and building a routine that I can stick to consistently. That's one of the reasons I was interested in trying Formel Skin.\n\n---\n\n[Source: Formel Skin review]\nOf course, everyone's skin is different, so my experience isn't necessarily going to be the same as yours. If you're thinking about trying something new, it's always a good idea to read the information provided, follow the directions carefully, and, if you have any specific skin concerns or medical conditions, talk to a qualified healthcare professional.",
+      "answer": "The creator in 'TEST 44' mentions that her skin has not fully cleared up and that she still has some remaining problem areas, such as on her chin and other zones. This indicates that she has not achieved completely clear skin. (Source: TEST 44)",
+      "faithfulness_score": 5,
+      "unsupported_claims": [],
+      "faithfulness_reasoning": "The answer accurately reflects the context provided in 'TEST 44' regarding the creator's skin condition and problem areas.",
+      "correctness_score": 5,
+      "correctness_reasoning": "The answer accurately reflects that the creator mentions remaining problem areas, fulfilling the criteria for a good answer."
+    },
+    {
+      "id": "rag_009",
+      "question": "What items are included in the personalized package customers receive from Formel Skin?",
+      "expected_answer_criteria": "Should mention a cleanser, a personalized formula/serum, and a booklet/brochure with usage instructions, sent by mail.",
+      "expected_video_ids": [
+        "8Uf8HaUMmyk",
+        "DH2z3BkknSQ"
+      ],
+      "retrieved_video_ids": [
+        "3f1452a3788",
+        "DH2z3BkknSQ"
+      ],
+      "retrieval_hit": true,
+      "context": "[Source: Formel Skin review]\nIf you're interested in learning more about Formel Skin, you can check out the link in my video description to see how the consultation works and whether it's something that fits your skincare goals. You can take a look at the information, see what's available, and decide if it's right for you.\n\n---\n\n[Source: Neue Kooperation – FORMEL SKIN!]\nich darf euch heute endlich die Produkte von Formel Skin vorstellen der absolute Vorteil hier von am Anfang wird eine Hautanalyse gemacht und daraufhin bekommst du die perfekten Produkte für deine Haut es wird dir eine Routine erstellt für morgens und abends und du bekommst dein behandlungsset direkt nach Hause geschickt die wirkstoffforel ist personalisiert und wird regelmäßig entsprechend nach deinen hautbedürfnissen angepasst wenn du das ganze jetzt auch mal ausprobieren möchtest dann erhält\n\n---\n\n[Source: Formel Skin review]\nIf you've been following me for a while, you probably know that skincare has always been a bit of trial and error for me. I've tried so many different products over the years, and honestly, one of the hardest parts has been figuring out which products actually work well together and building a routine that I can stick to consistently. That's one of the reasons I was interested in trying Formel Skin.\n\n---\n\n[Source: Formel Skin review]\nThe process was actually really simple. I went through an online consultation where I answered questions about my skin, my concerns, and my goals. I also uploaded a few photos, and based on that information, I received a personalized skincare recommendation. I really liked that it wasn't just about picking random products from a huge catalog but about creating a routine that made sense for my skin.\n\n---\n\n[Source: Formel Skin review]\nHey everyone! Welcome back to the channel. I hope you're all doing amazing. If you're new here, my name is Alexa, and today I wanted to talk a little bit about my skincare routine because I've been getting so many questions about what I've been using lately. Before we get started, I want to let you know that this video is sponsored by Formel Skin, so thank you to them for supporting today's video.",
+      "answer": "The transcript excerpts do not specify the exact items included in the personalized package customers receive from Formel Skin. They mention that a treatment set is sent directly to the customer, but the specific products are not detailed. \n\n(Source: Neue Kooperation – FORMEL SKIN!)",
+      "faithfulness_score": 5,
+      "unsupported_claims": [],
+      "faithfulness_reasoning": "The answer accurately reflects the context, which states that a treatment set is sent to customers without detailing specific products.",
+      "correctness_score": 1,
+      "correctness_reasoning": "The answer does not specify any of the required items, failing to address the question adequately."
+    },
+    {
+      "id": "rag_010",
+      "question": "What rating does the 'test 3' video give for not applying moisturizer after showering?",
+      "expected_answer_criteria": "4 out of 10 (nach dem Duschen nicht eincremen — 4 von 10).",
+      "expected_video_ids": [
+        "ACTsF3JxOhk"
+      ],
+      "retrieved_video_ids": [
+        "3f1452a3788",
+        "8Uf8HaUMmyk",
+        "ACTsF3JxOhk"
+      ],
+      "retrieval_hit": true,
+      "context": "[Source: test 3]\ndermatologinnenreiting täglich Haare waschen 5 von 10 abends immer Abschminken zehn von zehn direkt Pickel abdecken wenn sich was anbahnt acht von zehn nach dem Duschen nicht eincremen vier von zehn Zahnpasta auf Pickel schmieren Null von zehn Pickel ausdrücken sechs von zehn keine Sonnencreme benutzen aus Angst vor Unreinheiten 0 von 10\n\n---\n\n[Source: TEST 44]\nman hat auf jeden fall vom gesamtbild deutlich besser geworden das sieht man hört aber nicht so machen ich mag ich habe gesehen was es mit meiner haut gemacht hat gibt es jetzt auch mal ein kleines update ich habe mich jetzt mal ein willkommen serum zu einem neuen video einem skincare blog deswegen stehe ich auch schon in baden ungewöhnlicher ort um ein video zu beginn noch komplett ungeschminkt aber ich dachte jemand mal ein bisschen mit auf eine neue es ging teilweise ich hatte ja schon mal\n\n---\n\n[Source: Formel Skin review]\nIf you're interested in learning more about Formel Skin, you can check out the link in my video description to see how the consultation works and whether it's something that fits your skincare goals. You can take a look at the information, see what's available, and decide if it's right for you.\n\n---\n\n[Source: Formel Skin review]\nThe process was actually really simple. I went through an online consultation where I answered questions about my skin, my concerns, and my goals. I also uploaded a few photos, and based on that information, I received a personalized skincare recommendation. I really liked that it wasn't just about picking random products from a huge catalog but about creating a routine that made sense for my skin.\n\n---\n\n[Source: Formel Skin review]\nI've been following the routine as recommended, and one thing I've really appreciated is how straightforward it is. Everything comes with clear instructions, so I don't have to wonder which product I'm supposed to use or when I should be using it. Having that kind of structure has honestly made it much easier for me to stay consistent with my skincare, and I think consistency is one of the biggest factors when you're trying to build healthy skincare habits.",
+      "answer": "The 'test 3' video gives a rating of four out of ten for not applying moisturizer after showering. [Source: test 3]",
+      "faithfulness_score": 5,
+      "unsupported_claims": [],
+      "faithfulness_reasoning": "The answer accurately reflects the rating given in the context regarding not applying moisturizer after showering.",
+      "correctness_score": 5,
+      "correctness_reasoning": "The answer accurately states the rating given in the video for not applying moisturizer after showering."
+    }
+  ]
+}
