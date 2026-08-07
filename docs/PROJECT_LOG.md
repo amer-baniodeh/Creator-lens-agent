@@ -126,15 +126,38 @@ conversations, and a concrete latency number to set expectations against in a de
 **Caveat surfaced:** embedding calls bypass the traced code path, so these cost figures
 cover GPT generation only, not embeddings — noted rather than presented as complete.
 
+## 9. RAG answer-quality evaluation — and where the real bottleneck is
+
+The original RAG eval (built early on) judged "faithfulness" by showing the LLM judge
+only the question and final answer — in practice that measures whether an answer
+*sounds* grounded, not whether it verifiably is. Rebuilt it to show the judge the actual
+retrieved text and check every claim against it, and replaced generic placeholder
+questions with ones grounded in the real ingested videos (5 videos at time of writing,
+spanning German and English content).
+
+**What it found:** answer generation is fully trustworthy — a perfect faithfulness
+score across all test questions, including correctly saying "not enough information"
+rather than guessing when appropriate. Correctness (does the answer address what was
+asked) was noticeably lower, and every miss traced back to retrieval, not generation:
+one clear case where an English question failed to retrieve the German source video
+that actually had the answer, and cases where a long video's full content wasn't
+reachable within the small number of chunks pulled per query.
+
+**Why this matters going forward:** it confirms, with evidence rather than assumption,
+that generation quality is solid and retrieval is the thing to improve as the video
+corpus grows — a much more specific target than "RAG quality" in the abstract.
+
 ## Current state (updated as of the most recent entry above)
 
 - **Compliance checker:** grounded in real law, evaluated, ~94-97% accurate on hand-
   labeled claims across two independent test sets.
 - **Cost/latency:** near-negligible cost at current scale (sub-cent for all testing so
   far); full chat turn averages ~8-9 seconds.
-- **Known gaps:** RAG answer-quality metrics not yet built. One known compliance recall
-  miss (a professional-endorsement claim type) identified but not yet fixed.
-- **Not yet done:** a broader ingested video corpus (currently only 1-2 videos — RAG
-  quality is hard to judge meaningfully until this grows), YouTube ingestion on the
-  cloud-hosted version is still blocked (paste-transcript workaround in place), a
-  non-technical user test, and final presentation slides/rehearsal.
+- **RAG quality:** generation is fully faithful (no hallucination); retrieval is the
+  known bottleneck, particularly across languages and for longer videos.
+- **Known gaps:** one known compliance recall miss (a professional-endorsement claim
+  type) identified but not yet fixed.
+- **Not yet done:** a broader ingested video corpus (retrieval quality can't be properly
+  judged until this grows — currently 5 videos), YouTube ingestion on the cloud-hosted
+  version is still blocked (paste-transcript workaround in place), a non-technical user
+  test, and final presentation slides/rehearsal.
