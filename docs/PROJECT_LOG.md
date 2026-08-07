@@ -110,14 +110,30 @@ on the unseen data, confirming the improvement generalizes.
 place, so future changes can be measured against this baseline instead of relying on
 manual spot-checks.
 
+## 8. Cost and latency, from LangSmith traces
+
+Tracing has been on since the very first notebook, so every ingestion, chat turn, and
+compliance check run through the project so far had already been recorded — just never
+pulled into a report. No new instrumentation was needed, only a summary built on top of
+existing traces.
+
+**What it found:** across ~2 days of development testing (398 traced runs), total GPT
+spend was under a cent. A full agent chat turn (reasoning + tool calls + answer) costs
+roughly $0.0005 and takes ~8-9 seconds on average; a direct RAG answer without agent
+tool-selection overhead is cheaper and faster. Useful floor for later cost-at-scale
+conversations, and a concrete latency number to set expectations against in a demo.
+
+**Caveat surfaced:** embedding calls bypass the traced code path, so these cost figures
+cover GPT generation only, not embeddings — noted rather than presented as complete.
+
 ## Current state (updated as of the most recent entry above)
 
 - **Compliance checker:** grounded in real law, evaluated, ~94-97% accurate on hand-
   labeled claims across two independent test sets.
-- **Known gaps:** RAG answer-quality metrics and cost/latency tracking not yet built
-  (LangSmith has been capturing this data throughout — just not yet pulled into a
-  report). One known compliance recall miss (a professional-endorsement claim type)
-  identified but not yet fixed.
+- **Cost/latency:** near-negligible cost at current scale (sub-cent for all testing so
+  far); full chat turn averages ~8-9 seconds.
+- **Known gaps:** RAG answer-quality metrics not yet built. One known compliance recall
+  miss (a professional-endorsement claim type) identified but not yet fixed.
 - **Not yet done:** a broader ingested video corpus (currently only 1-2 videos — RAG
   quality is hard to judge meaningfully until this grows), YouTube ingestion on the
   cloud-hosted version is still blocked (paste-transcript workaround in place), a
