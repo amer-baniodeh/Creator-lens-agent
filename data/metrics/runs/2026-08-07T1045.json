@@ -1,0 +1,89 @@
+{
+  "run_at": "2026-08-07T10:45:41.265009+00:00",
+  "project": "copilot-mvp",
+  "trace_window": {
+    "earliest": "2026-08-05T15:00:45.573992+00:00",
+    "latest": "2026-08-07T08:51:25.515729+00:00"
+  },
+  "totals": {
+    "total_runs": 398,
+    "llm_calls": 48,
+    "tool_calls": 21,
+    "root_operations": 29,
+    "models_used": [
+      "gpt-4o-mini"
+    ],
+    "total_cost_usd": 0.009345,
+    "total_prompt_tokens": 51450,
+    "total_completion_tokens": 4953
+  },
+  "llm_call_latency_seconds": {
+    "n": 48,
+    "avg": 2.49,
+    "p50": 2.069,
+    "p95": 5.237,
+    "max": 7.029
+  },
+  "operation_breakdown": {
+    "AgentExecutor": {
+      "n": 15,
+      "avg_cost_usd": 0.000511,
+      "total_cost_usd": 0.007672,
+      "latency": {
+        "n": 15,
+        "avg": 8.621,
+        "p50": 7.898,
+        "p95": 16.819,
+        "max": 16.819
+      }
+    },
+    "RunnableSequence": {
+      "n": 13,
+      "avg_cost_usd": 0.000129,
+      "total_cost_usd": 0.001673,
+      "latency": {
+        "n": 13,
+        "avg": 3.23,
+        "p50": 2.653,
+        "p95": 8.249,
+        "max": 8.249
+      }
+    },
+    "query_corpus": {
+      "n": 1,
+      "avg_cost_usd": 0.0,
+      "total_cost_usd": 0.0,
+      "latency": {
+        "n": 1,
+        "avg": 0.939,
+        "p50": 0.939,
+        "p95": 0.939,
+        "max": 0.939
+      }
+    }
+  },
+  "tool_latency_seconds": {
+    "query_corpus": {
+      "n": 12,
+      "avg": 1.321,
+      "p50": 0.939,
+      "p95": 2.715,
+      "max": 2.715
+    },
+    "check_compliance": {
+      "n": 8,
+      "avg": 2.505,
+      "p50": 2.019,
+      "p95": 6.85,
+      "max": 6.85
+    },
+    "ingest_video": {
+      "n": 1,
+      "avg": 1.907,
+      "p50": 1.907,
+      "p95": 1.907,
+      "max": 1.907
+    }
+  },
+  "caveat": "Embedding calls (text-embedding-3-small) bypass LangChain and are not traced, so total_cost_usd covers GPT-4o-mini generation only. Embedding cost is real but small (~$0.02 / 1M tokens)."
+}
