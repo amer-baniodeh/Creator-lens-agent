@@ -158,14 +158,45 @@ against the larger corpus (5 → 11 videos) as a controlled before/after compari
 previously retrieved the correct video were completely crowded out once more,
 topically-similar content existed to compete with — both affecting short videos with
 few chunks, which get statistically outnumbered by longer new videos in similarity
-search. Faithfulness also dipped slightly, revealing a new risk category: when
-retrieval misses the target video entirely, the model can still confidently attribute
-an answer to the expected source name rather than admitting it wasn't found.
+search. Faithfulness dipped slightly too, in a way that first looked like a new
+hallucination risk (the model appearing to attribute an answer to the wrong source) —
+investigated properly in the next entry, and it turned out not to be that.
 
 **Why this matters:** this is no longer a prediction — it's measured evidence that the
 current fixed top-5 retrieval will not scale as the corpus grows toward the target of
 20+ videos, without some form of improvement (larger k, reranking, or better filtering).
 Gives a concrete, evidenced problem to solve rather than a vague "improve RAG" goal.
+
+## 11. Hardening against hallucination — and catching two self-inflicted bugs along the way
+
+Went back to the apparent hallucination signal from the previous entry with a proper
+investigation rather than taking it at face value. Neither flagged case turned out to
+be a real hallucination — one was the automated judge itself making an error, the
+other was an incomplete eval label where the system's answer was actually correct.
+Real hallucination did not occur in that test set.
+
+Hardened the system anyway, since a prose-based "I don't know" has no structural
+guarantee behind it: raised retrieval breadth (5→8 chunks), added a minimum relevance
+score below which the system returns a fixed, explicit "nothing relevant found" signal
+instead of ever handing the model weak matches to guess from, and made both the agent
+and the RAG chain require explicit refusal — not a hedge — when retrieved content
+doesn't support an answer. Verified directly: a genuinely out-of-scope question now
+cleanly returns the explicit no-content signal rather than any risk of a guessed answer.
+
+**Two bugs caught by testing this properly, not assumed away:** the automated judge
+didn't know about the new "not found" signal and was scoring every honest refusal as
+a hallucination — fixed. The first version of the refusal instruction over-corrected
+and started declining even when the right information was clearly present but
+surrounded by irrelevant retrieved content — rewritten to check every retrieved piece
+individually before declining, which recovered most of the lost ground.
+
+**Honest result, not a clean win:** faithfulness is now confirmed solid (not just
+apparently solid). Correctness on the eval set is lower than before this work, not
+higher — the system now gives fewer wrong or overconfident answers, at the cost of
+more explicit "not found" responses. That's a real tradeoff, not a pure improvement,
+and one specific gap remains open: a correct non-English chunk can still get missed
+when it's surrounded by content in a different language. Documented rather than
+papered over.
 
 ## Current state (updated as of the most recent entry above)
 
@@ -173,13 +204,13 @@ Gives a concrete, evidenced problem to solve rather than a vague "improve RAG" g
   labeled claims across two independent test sets.
 - **Cost/latency:** near-negligible cost at current scale (sub-cent for all testing so
   far); full chat turn averages ~8-9 seconds.
-- **RAG quality:** generation remains highly faithful; retrieval is the confirmed
-  bottleneck and measurably degrades as the corpus grows (90%→60% hit rate after
-  doubling the video count) — the clearest concrete next improvement to make.
+- **RAG quality:** generation is confirmed faithful, with structural safeguards against
+  guessing now in place (not just prompt instructions). Retrieval remains the
+  bottleneck and measurably degrades as the corpus grows — the clearest concrete next
+  improvement to make, alongside the known cross-lingual retrieval gap.
 - **Corpus:** 11 videos ingested (up from 5), mix of English and German content.
 - **Known gaps:** one known compliance recall miss (a professional-endorsement claim
-  type) identified but not yet fixed.
-- **Not yet done:** improving retrieval to handle a larger corpus (now evidenced as
-  necessary, not just anticipated), YouTube ingestion on the cloud-hosted version is
-  still blocked (paste-transcript workaround in place), a non-technical user test, and
-  final presentation slides/rehearsal.
+  type); one known cross-lingual RAG retrieval gap. Neither fixed yet, both documented.
+- **Not yet done:** improving retrieval to handle a larger corpus, YouTube ingestion on
+  the cloud-hosted version is still blocked (paste-transcript workaround in place), a
+  non-technical user test, and final presentation slides/rehearsal.
