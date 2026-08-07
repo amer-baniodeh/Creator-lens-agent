@@ -1,0 +1,221 @@
+{
+  "description": "Hand-labeled test set for evaluating check_compliance() against real German health-advertising law (HWG, UWG). Ground truth labels are derived from the actual ingested legal text, not general knowledge.",
+  "categories": {
+    "blocklist": "Should be caught by the layer-1 regex blocklist alone (positive control).",
+    "rag_subtle": "Dodges the blocklist but violates a specific HWG/UWG provision — the interesting test of RAG grounding.",
+    "compliant": "Genuinely compliant statements (true negatives).",
+    "ambiguous": "Borderline cases requiring judgment; labeled per best-faith legal reading."
+  },
+  "examples": [
+    {
+      "id": "eval_001",
+      "claim": "This serum cures acne in just 7 days!",
+      "ground_truth_compliant": false,
+      "category": "blocklist",
+      "rationale": "Contains 'cures acne' — direct cure claim, blocklisted and forbidden under HWG §3 (Irreführungsverbot)."
+    },
+    {
+      "id": "eval_002",
+      "claim": "Clinically proven to eliminate wrinkles overnight.",
+      "ground_truth_compliant": false,
+      "category": "blocklist",
+      "rationale": "Contains 'clinically proven' — unsubstantiated clinical authority claim, blocklisted."
+    },
+    {
+      "id": "eval_003",
+      "claim": "Dermatologist approved, guaranteed results with no side effects.",
+      "ground_truth_compliant": false,
+      "category": "blocklist",
+      "rationale": "Multiple blocklist hits: 'dermatologist approved', 'guaranteed results', 'no side effects'."
+    },
+    {
+      "id": "eval_004",
+      "claim": "100% effective, works every time.",
+      "ground_truth_compliant": false,
+      "category": "blocklist",
+      "rationale": "Contains '100% effective' and 'works every time' — guarantee language, blocklisted."
+    },
+    {
+      "id": "eval_005",
+      "claim": "This is a permanent solution — forever clear skin.",
+      "ground_truth_compliant": false,
+      "category": "blocklist",
+      "rationale": "Contains 'permanent solution' and 'forever clear' — exaggerated before/after language, blocklisted."
+    },
+    {
+      "id": "eval_006",
+      "claim": "My dermatologist friend Julia recommends this brand to all her patients.",
+      "ground_truth_compliant": false,
+      "category": "rag_subtle",
+      "rationale": "Recommendation from a health professional used in advertising outside professional circles — HWG §11 Abs. 1 Nr. 2. No blocklist phrase match."
+    },
+    {
+      "id": "eval_007",
+      "claim": "As seen on TV and loved by celebrities everywhere — the product everyone's talking about.",
+      "ground_truth_compliant": false,
+      "category": "rag_subtle",
+      "rationale": "Celebrity-driven recommendation encouraging use based on fame — HWG §11 Abs. 1 Nr. 2."
+    },
+    {
+      "id": "eval_008",
+      "claim": "Look at this insane before and after — I couldn't believe the difference after one week.",
+      "ground_truth_compliant": false,
+      "category": "rag_subtle",
+      "rationale": "Before/after depiction in a manner likely to mislead about typical results — HWG §11 Abs. 1 Nr. 3/5."
+    },
+    {
+      "id": "eval_009",
+      "claim": "If you don't use this, your skin will only get worse — but with it, you'll glow.",
+      "ground_truth_compliant": false,
+      "category": "rag_subtle",
+      "rationale": "Implies health/appearance is harmed by non-use and improved by use — HWG §11 Abs. 1 Nr. 7."
+    },
+    {
+      "id": "eval_010",
+      "claim": "Use code JULIA20 for 20% off — swipe up! (no ad disclosure shown anywhere in the post)",
+      "ground_truth_compliant": false,
+      "category": "rag_subtle",
+      "rationale": "Undisclosed commercial intent in a promotional post — UWG §5a Abs. 4 (failure to disclose commercial purpose)."
+    },
+    {
+      "id": "eval_011",
+      "claim": "This natural remedy works exactly like prescription retinoids, without the hassle.",
+      "ground_truth_compliant": false,
+      "category": "rag_subtle",
+      "rationale": "Claims equivalent effect to another treatment outside professional circles — HWG §11 Abs. 2."
+    },
+    {
+      "id": "eval_012",
+      "claim": "After using this for two weeks my eczema was completely gone and never came back.",
+      "ground_truth_compliant": false,
+      "category": "rag_subtle",
+      "rationale": "Direct claim of curing a medical condition — misleading effect claim under HWG §3, advertised outside professional circles."
+    },
+    {
+      "id": "eval_013",
+      "claim": "This product will definitely fix your acne, I promise.",
+      "ground_truth_compliant": false,
+      "category": "rag_subtle",
+      "rationale": "Implies certainty of effect without the exact blocklisted phrases — misleading guarantee under HWG §3."
+    },
+    {
+      "id": "eval_014",
+      "claim": "There's really no reason to book a dermatologist appointment when you have this in your routine.",
+      "ground_truth_compliant": false,
+      "category": "rag_subtle",
+      "rationale": "Paraphrase of 'no need for a dermatologist' that avoids the exact blocklisted phrase — tests whether RAG grounding catches rewordings the blocklist misses."
+    },
+    {
+      "id": "eval_015",
+      "claim": "I finally found something that treats my rosacea.",
+      "ground_truth_compliant": false,
+      "category": "rag_subtle",
+      "rationale": "Direct medical condition treatment claim made outside professional circles — HWG §3 / §11."
+    },
+    {
+      "id": "eval_016",
+      "claim": "I've been using this serum for a month and my skin feels really soft.",
+      "ground_truth_compliant": true,
+      "category": "compliant",
+      "rationale": "Personal, subjective experience with no medical or guarantee claims."
+    },
+    {
+      "id": "eval_017",
+      "claim": "This is my honest review after 6 weeks of use — results vary by skin type.",
+      "ground_truth_compliant": true,
+      "category": "compliant",
+      "rationale": "Explicitly hedges on individual variation; no guarantee or medical claim."
+    },
+    {
+      "id": "eval_018",
+      "claim": "I like how lightweight this moisturizer feels under makeup.",
+      "ground_truth_compliant": true,
+      "category": "compliant",
+      "rationale": "Purely sensory/cosmetic observation, no efficacy or medical claim."
+    },
+    {
+      "id": "eval_019",
+      "claim": "Ad: paid partnership with Formel Skin. Use code JULIA20 for a discount.",
+      "ground_truth_compliant": true,
+      "category": "compliant",
+      "rationale": "Commercial intent is explicitly disclosed ('Ad:', 'paid partnership') — satisfies UWG §5a Abs. 4."
+    },
+    {
+      "id": "eval_020",
+      "claim": "Everyone's skin is different, so I'd recommend chatting with your dermatologist before trying prescription treatments.",
+      "ground_truth_compliant": true,
+      "category": "compliant",
+      "rationale": "Directs the audience toward professional medical advice rather than replacing it."
+    },
+    {
+      "id": "eval_021",
+      "claim": "This packaging is so cute, I love unboxing new skincare.",
+      "ground_truth_compliant": true,
+      "category": "compliant",
+      "rationale": "Aesthetic commentary unrelated to product efficacy."
+    },
+    {
+      "id": "eval_022",
+      "claim": "I read the ingredient list and I like that it has niacinamide.",
+      "ground_truth_compliant": true,
+      "category": "compliant",
+      "rationale": "Factual ingredient mention, no efficacy or medical claim attached."
+    },
+    {
+      "id": "eval_023",
+      "claim": "Not sponsored, just genuinely enjoy this product.",
+      "ground_truth_compliant": true,
+      "category": "compliant",
+      "rationale": "Discloses lack of commercial relationship; no problematic claims."
+    },
+    {
+      "id": "eval_024",
+      "claim": "My skin texture has visibly improved since I started this routine two months ago.",
+      "ground_truth_compliant": true,
+      "category": "compliant",
+      "rationale": "Personal, time-bound, non-medical observation without guarantee language."
+    },
+    {
+      "id": "eval_025",
+      "claim": "This is part of a paid collaboration with the brand — as always, opinions are my own.",
+      "ground_truth_compliant": true,
+      "category": "compliant",
+      "rationale": "Clear commercial disclosure satisfying UWG §5a Abs. 4."
+    },
+    {
+      "id": "eval_026",
+      "claim": "This brand completely changed my skincare routine.",
+      "ground_truth_compliant": true,
+      "category": "ambiguous",
+      "rationale": "Vague marketing puffery about routine change, not a specific medical or guarantee claim. Judgment call: compliant."
+    },
+    {
+      "id": "eval_027",
+      "claim": "It's basically magic for dry skin.",
+      "ground_truth_compliant": true,
+      "category": "ambiguous",
+      "rationale": "Hyperbole without a specific medical claim or guarantee. Judgment call: compliant, though borderline puffery."
+    },
+    {
+      "id": "eval_028",
+      "claim": "Trust me, this WILL work for you.",
+      "ground_truth_compliant": false,
+      "category": "ambiguous",
+      "rationale": "Implies a guaranteed personal result without blocklisted phrasing. Judgment call: non-compliant under HWG §3 guarantee framing."
+    },
+    {
+      "id": "eval_029",
+      "claim": "Some people notice a difference in a few days, results vary.",
+      "ground_truth_compliant": true,
+      "category": "ambiguous",
+      "rationale": "Explicitly hedges with 'results vary' — no guarantee. Judgment call: compliant."
+    },
+    {
+      "id": "eval_030",
+      "claim": "This brand donates part of proceeds to skin health charities.",
+      "ground_truth_compliant": true,
+      "category": "ambiguous",
+      "rationale": "Corporate social responsibility statement, unrelated to product efficacy claims. Judgment call: compliant."
+    }
+  ]
+}

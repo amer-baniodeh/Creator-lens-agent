@@ -1,0 +1,831 @@
+{
+  "run_at": "2026-08-07T09:46:20.288667+00:00",
+  "test_set_size": 30,
+  "full_system": {
+    "metrics": {
+      "tp": 16,
+      "fp": 8,
+      "fn": 0,
+      "tn": 6,
+      "precision": 0.667,
+      "recall": 1.0,
+      "f1": 0.8,
+      "accuracy": 0.733,
+      "n": 30
+    },
+    "by_category": {
+      "ambiguous": {
+        "n": 5,
+        "correct": 1,
+        "accuracy": 0.2
+      },
+      "blocklist": {
+        "n": 5,
+        "correct": 5,
+        "accuracy": 1.0
+      },
+      "compliant": {
+        "n": 10,
+        "correct": 6,
+        "accuracy": 0.6
+      },
+      "rag_subtle": {
+        "n": 10,
+        "correct": 10,
+        "accuracy": 1.0
+      }
+    },
+    "predictions": [
+      {
+        "id": "eval_001",
+        "claim": "This serum cures acne in just 7 days!",
+        "category": "blocklist",
+        "ground_truth_compliant": false,
+        "predicted_compliant": false,
+        "correct": true,
+        "source": "blocklist",
+        "cited_sections": [],
+        "reason": "Text contains 1 forbidden phrase(s) under German/EU health advertising law.",
+        "latency_ms": 0
+      },
+      {
+        "id": "eval_002",
+        "claim": "Clinically proven to eliminate wrinkles overnight.",
+        "category": "blocklist",
+        "ground_truth_compliant": false,
+        "predicted_compliant": false,
+        "correct": true,
+        "source": "blocklist",
+        "cited_sections": [],
+        "reason": "Text contains 1 forbidden phrase(s) under German/EU health advertising law.",
+        "latency_ms": 0
+      },
+      {
+        "id": "eval_003",
+        "claim": "Dermatologist approved, guaranteed results with no side effects.",
+        "category": "blocklist",
+        "ground_truth_compliant": false,
+        "predicted_compliant": false,
+        "correct": true,
+        "source": "blocklist",
+        "cited_sections": [],
+        "reason": "Text contains 3 forbidden phrase(s) under German/EU health advertising law.",
+        "latency_ms": 0
+      },
+      {
+        "id": "eval_004",
+        "claim": "100% effective, works every time.",
+        "category": "blocklist",
+        "ground_truth_compliant": false,
+        "predicted_compliant": false,
+        "correct": true,
+        "source": "blocklist",
+        "cited_sections": [],
+        "reason": "Text contains 2 forbidden phrase(s) under German/EU health advertising law.",
+        "latency_ms": 0
+      },
+      {
+        "id": "eval_005",
+        "claim": "This is a permanent solution — forever clear skin.",
+        "category": "blocklist",
+        "ground_truth_compliant": false,
+        "predicted_compliant": false,
+        "correct": true,
+        "source": "blocklist",
+        "cited_sections": [],
+        "reason": "Text contains 2 forbidden phrase(s) under German/EU health advertising law.",
+        "latency_ms": 0
+      },
+      {
+        "id": "eval_006",
+        "claim": "My dermatologist friend Julia recommends this brand to all her patients.",
+        "category": "rag_subtle",
+        "ground_truth_compliant": false,
+        "predicted_compliant": false,
+        "correct": true,
+        "source": "llm_rag",
+        "cited_sections": [
+          "§11 Abs. 1 Nr. 2 HWG"
+        ],
+        "reason": "The statement implies a recommendation from a healthcare professional, which is prohibited for advertising outside of professional circles according to §11 Abs. 1 Nr. 2 HWG.",
+        "latency_ms": 3590
+      },
+      {
+        "id": "eval_007",
+        "claim": "As seen on TV and loved by celebrities everywhere — the product everyone's talking about.",
+        "category": "rag_subtle",
+        "ground_truth_compliant": false,
+        "predicted_compliant": false,
+        "correct": true,
+        "source": "llm_rag",
+        "cited_sections": [
+          "§11 Abs. 1 Nr. 2 HWG"
+        ],
+        "reason": "The phrase 'loved by celebrities everywhere' suggests a recommendation from well-known individuals, which violates §11 Abs. 1 Nr. 2 HWG, as it implies that the product's use is endorsed by persons whose fame could encourage consumption.",
+        "latency_ms": 2686
+      },
+      {
+        "id": "eval_008",
+        "claim": "Look at this insane before and after — I couldn't believe the difference after one week.",
+        "category": "rag_subtle",
+        "ground_truth_compliant": false,
+        "predicted_compliant": false,
+        "correct": true,
+        "source": "llm_rag",
+        "cited_sections": [
+          "§11 Abs. 1 Nr. 1 HWG"
+        ],
+        "reason": "The claim suggests a significant change in appearance due to a treatment, which implies a comparative representation of the body state before and after the intervention, violating §11 Abs. 1 Nr. 1 HWG.",
+        "latency_ms": 8182
+      },
+      {
+        "id": "eval_009",
+        "claim": "If you don't use this, your skin will only get worse — but with it, you'll glow.",
+        "category": "rag_subtle",
+        "ground_truth_compliant": false,
+        "predicted_compliant": false,
+        "correct": true,
+        "source": "llm_rag",
+        "cited_sections": [
+          "§11 Abs. 1 Nr. 7 HWG"
+        ],
+        "reason": "The phrase suggests that the health of the skin will deteriorate without the use of the product, which implies that the health could be improved by using it, violating §11 Abs. 1 Nr. 7 HWG.",
+        "latency_ms": 2766
+      },
+      {
+        "id": "eval_010",
+        "claim": "Use code JULIA20 for 20% off — swipe up! (no ad disclosure shown anywhere in the post)",
+        "category": "rag_subtle",
+        "ground_truth_compliant": false,
+        "predicted_compliant": false,
+        "correct": true,
+        "source": "llm_rag",
+        "cited_sections": [
+          "§11 Abs. 1 Nr. 9 HWG"
+        ],
+        "reason": "The content lacks any ad disclosure, which is required for advertising, particularly under §11 Abs. 1 Nr. 9 HWG, as it must be clear that the content is promotional.",
+        "latency_ms": 2859
+      },
+      {
+        "id": "eval_011",
+        "claim": "This natural remedy works exactly like prescription retinoids, without the hassle.",
+        "category": "rag_subtle",
+        "ground_truth_compliant": false,
+        "predicted_compliant": false,
+        "correct": true,
+        "source": "llm_rag",
+        "cited_sections": [
+          "§11 Abs. 2 HWG"
+        ],
+        "reason": "The claim that the natural remedy works 'exactly like prescription retinoids' suggests a comparison to a prescription medication, which is prohibited under §11 Abs. 2 HWG, as it implies that the effect of the remedy corresponds to or is superior to that of another medication.",
+        "latency_ms": 3163
+      },
+      {
+        "id": "eval_012",
+        "claim": "After using this for two weeks my eczema was completely gone and never came back.",
+        "category": "rag_subtle",
+        "ground_truth_compliant": false,
+        "predicted_compliant": false,
+        "correct": true,
+        "source": "llm_rag",
+        "cited_sections": [
+          "§12 Abs. 1 Nr. 1 HWG"
+        ],
+        "reason": "The claim that the product completely cured eczema and prevented its return falls under the prohibition of advertising that relates to the treatment or alleviation of diseases, as stated in §12 Abs. 1 Nr. 1 HWG.",
+        "latency_ms": 2547
+      },
+      {
+        "id": "eval_013",
+        "claim": "This product will definitely fix your acne, I promise.",
+        "category": "rag_subtle",
+        "ground_truth_compliant": false,
+        "predicted_compliant": false,
+        "correct": true,
+        "source": "llm_rag",
+        "cited_sections": [
+          "§3 Abs. 1 Nr. 1 HWG"
+        ],
+        "reason": "The statement 'This product will definitely fix your acne, I promise' suggests a guaranteed therapeutic effect, which is misleading and violates §3 Abs. 1 Nr. 1 HWG regarding the attribution of therapeutic efficacy that the product does not possess.",
+        "latency_ms": 2906
+      },
+      {
+        "id": "eval_014",
+        "claim": "There's really no reason to book a dermatologist appointment when you have this in your routine.",
+        "category": "rag_subtle",
+        "ground_truth_compliant": false,
+        "predicted_compliant": false,
+        "correct": true,
+        "source": "llm_rag",
+        "cited_sections": [
+          "§11 Abs. 1 Nr. 7 HWG"
+        ],
+        "reason": "The statement implies that the use of a specific product can replace the need for professional medical advice or treatment, which suggests that health could be compromised by not using the product, violating §11 Abs. 1 Nr. 7 HWG.",
+        "latency_ms": 2467
+      },
+      {
+        "id": "eval_015",
+        "claim": "I finally found something that treats my rosacea.",
+        "category": "rag_subtle",
+        "ground_truth_compliant": false,
+        "predicted_compliant": false,
+        "correct": true,
+        "source": "llm_rag",
+        "cited_sections": [
+          "§9 HWG"
+        ],
+        "reason": "The statement implies a treatment for a specific medical condition (rosacea) without indicating that it is based on personal experience, which could violate §9 Abs. 1 HWG regarding advertising for the treatment of diseases not based on personal perception.",
+        "latency_ms": 2246
+      },
+      {
+        "id": "eval_016",
+        "claim": "I've been using this serum for a month and my skin feels really soft.",
+        "category": "compliant",
+        "ground_truth_compliant": true,
+        "predicted_compliant": false,
+        "correct": false,
+        "source": "llm_rag",
+        "cited_sections": [
+          "§11 Abs. 1 Nr. 7 HWG"
+        ],
+        "reason": "The statement implies a health benefit related to the use of a cosmetic product, which could be interpreted as a claim about the effectiveness of the product in improving skin condition, potentially violating §11 Abs. 1 Nr. 7 HWG.",
+        "latency_ms": 2273
+      },
+      {
+        "id": "eval_017",
+        "claim": "This is my honest review after 6 weeks of use — results vary by skin type.",
+        "category": "compliant",
+        "ground_truth_compliant": true,
+        "predicted_compliant": false,
+        "correct": false,
+        "source": "llm_rag",
+        "cited_sections": [
+          "§11 Abs. 1 Nr. 7 HWG"
+        ],
+        "reason": "The statement suggests that results may vary based on skin type, which could imply a recommendation or effectiveness of a treatment without proper substantiation, violating §11 Abs. 1 Nr. 7 HWG.",
+        "latency_ms": 3952
+      },
+      {
+        "id": "eval_018",
+        "claim": "I like how lightweight this moisturizer feels under makeup.",
+        "category": "compliant",
+        "ground_truth_compliant": true,
+        "predicted_compliant": true,
+        "correct": true,
+        "source": "llm_rag",
+        "cited_sections": [],
+        "reason": "The statement does not make any claims regarding the treatment, prevention, or diagnosis of diseases, which means it does not fall under the advertising regulations for medicinal products as outlined in §1 Abs. 1 Nr. 2 HWG.",
+        "latency_ms": 2212
+      },
+      {
+        "id": "eval_019",
+        "claim": "Ad: paid partnership with Formel Skin. Use code JULIA20 for a discount.",
+        "category": "compliant",
+        "ground_truth_compliant": true,
+        "predicted_compliant": false,
+        "correct": false,
+        "source": "llm_rag",
+        "cited_sections": [
+          "§4 Abs. 1 HWG"
+        ],
+        "reason": "The advertisement promotes a product (Formel Skin) without providing the necessary information required by §4 Abs. 1 HWG, such as the name of the pharmaceutical entrepreneur, the designation of the product, and other essential details.",
+        "latency_ms": 2725
+      },
+      {
+        "id": "eval_020",
+        "claim": "Everyone's skin is different, so I'd recommend chatting with your dermatologist before trying prescription treatments.",
+        "category": "compliant",
+        "ground_truth_compliant": true,
+        "predicted_compliant": true,
+        "correct": true,
+        "source": "llm_rag",
+        "cited_sections": [],
+        "reason": "The content suggests consulting a dermatologist before trying prescription treatments, which aligns with the guidance to seek professional advice and does not promote any specific medication or treatment directly.",
+        "latency_ms": 2430
+      },
+      {
+        "id": "eval_021",
+        "claim": "This packaging is so cute, I love unboxing new skincare.",
+        "category": "compliant",
+        "ground_truth_compliant": true,
+        "predicted_compliant": true,
+        "correct": true,
+        "source": "llm_rag",
+        "cited_sections": [],
+        "reason": "The content does not make any claims about medicinal products or treatments and does not fall under the prohibitions outlined in the provided legal excerpts.",
+        "latency_ms": 2288
+      },
+      {
+        "id": "eval_022",
+        "claim": "I read the ingredient list and I like that it has niacinamide.",
+        "category": "compliant",
+        "ground_truth_compliant": true,
+        "predicted_compliant": true,
+        "correct": true,
+        "source": "llm_rag",
+        "cited_sections": [],
+        "reason": "The statement does not constitute advertising for a medicinal product as it does not make any claims regarding the treatment or prevention of diseases, nor does it provide any specific information that would require compliance with the HWG provisions.",
+        "latency_ms": 4061
+      },
+      {
+        "id": "eval_023",
+        "claim": "Not sponsored, just genuinely enjoy this product.",
+        "category": "compliant",
+        "ground_truth_compliant": true,
+        "predicted_compliant": true,
+        "correct": true,
+        "source": "llm_rag",
+        "cited_sections": [],
+        "reason": "The phrase does not make any specific claims about the product's effectiveness or health benefits, thus it does not violate any specific provisions of the HWG.",
+        "latency_ms": 2315
+      },
+      {
+        "id": "eval_024",
+        "claim": "My skin texture has visibly improved since I started this routine two months ago.",
+        "category": "compliant",
+        "ground_truth_compliant": true,
+        "predicted_compliant": false,
+        "correct": false,
+        "source": "llm_rag",
+        "cited_sections": [
+          "§11 Abs. 1 Nr. 7 HWG"
+        ],
+        "reason": "The statement suggests a health benefit related to skin texture improvement, which could imply that the product has a therapeutic effect, violating §11 Abs. 1 Nr. 7 HWG by suggesting that health is improved through the use of the product.",
+        "latency_ms": 2753
+      },
+      {
+        "id": "eval_025",
+        "claim": "This is part of a paid collaboration with the brand — as always, opinions are my own.",
+        "category": "compliant",
+        "ground_truth_compliant": true,
+        "predicted_compliant": true,
+        "correct": true,
+        "source": "llm_rag",
+        "cited_sections": [],
+        "reason": "The content does not contain any specific claims or representations about medicinal products, treatments, or health benefits that would violate the provisions of the HWG. It simply states that the opinions expressed are personal, which is compliant with advertising regulations.",
+        "latency_ms": 2741
+      },
+      {
+        "id": "eval_026",
+        "claim": "This brand completely changed my skincare routine.",
+        "category": "ambiguous",
+        "ground_truth_compliant": true,
+        "predicted_compliant": false,
+        "correct": false,
+        "source": "llm_rag",
+        "cited_sections": [
+          "§11 Abs. 1 Nr. 7 HWG"
+        ],
+        "reason": "The statement suggests a significant impact on health or well-being, which may imply that the product is effective in treating or preventing health issues, violating §11 Abs. 1 Nr. 7 HWG.",
+        "latency_ms": 2582
+      },
+      {
+        "id": "eval_027",
+        "claim": "It's basically magic for dry skin.",
+        "category": "ambiguous",
+        "ground_truth_compliant": true,
+        "predicted_compliant": false,
+        "correct": false,
+        "source": "llm_rag",
+        "cited_sections": [
+          "§11 Abs. 1 Nr. 7 HWG"
+        ],
+        "reason": "The phrase 'it's basically magic for dry skin' suggests an exaggerated or misleading claim about the effectiveness of a product, which could be interpreted as implying that the product can significantly improve health or treat a condition, violating §11 Abs. 1 Nr. 7 HWG.",
+        "latency_ms": 2563
+      },
+      {
+        "id": "eval_028",
+        "claim": "Trust me, this WILL work for you.",
+        "category": "ambiguous",
+        "ground_truth_compliant": false,
+        "predicted_compliant": false,
+        "correct": true,
+        "source": "llm_rag",
+        "cited_sections": [
+          "§4 Abs. 1 HWG"
+        ],
+        "reason": "The phrase 'this WILL work for you' implies a guarantee of effectiveness, which is not permissible under §4 Abs. 1 HWG, as it does not provide the required information about the medicine and could mislead consumers.",
+        "latency_ms": 2249
+      },
+      {
+        "id": "eval_029",
+        "claim": "Some people notice a difference in a few days, results vary.",
+        "category": "ambiguous",
+        "ground_truth_compliant": true,
+        "predicted_compliant": false,
+        "correct": false,
+        "source": "llm_rag",
+        "cited_sections": [
+          "§3 Abs. 1 Nr. 1 HWG"
+        ],
+        "reason": "The phrase 'Some people notice a difference in a few days, results vary' suggests a therapeutic effect that may not be substantiated, which could mislead consumers about the efficacy of the product, violating §3 Abs. 1 Nr. 1 HWG.",
+        "latency_ms": 2905
+      },
+      {
+        "id": "eval_030",
+        "claim": "This brand donates part of proceeds to skin health charities.",
+        "category": "ambiguous",
+        "ground_truth_compliant": true,
+        "predicted_compliant": false,
+        "correct": false,
+        "source": "llm_rag",
+        "cited_sections": [
+          "§11 Abs. 1 Nr. 7 HWG"
+        ],
+        "reason": "The claim about donating part of proceeds to skin health charities could imply a promotional benefit that may not be compliant with the provisions regarding advertising for medical products, particularly under §11 Abs. 1 Nr. 7 HWG, which prohibits suggesting that health is improved by using a product.",
+        "latency_ms": 2523
+      }
+    ]
+  },
+  "layer2_comparison": {
+    "n_non_blocklist_examples": 25,
+    "ungrounded_metrics": {
+      "tp": 9,
+      "fp": 1,
+      "fn": 2,
+      "tn": 13,
+      "precision": 0.9,
+      "recall": 0.818,
+      "f1": 0.857,
+      "accuracy": 0.88,
+      "n": 25
+    },
+    "grounded_metrics": {
+      "tp": 11,
+      "fp": 8,
+      "fn": 0,
+      "tn": 6,
+      "precision": 0.579,
+      "recall": 1.0,
+      "f1": 0.733,
+      "accuracy": 0.68,
+      "n": 25
+    },
+    "ungrounded_predictions": [
+      {
+        "id": "eval_006",
+        "category": "rag_subtle",
+        "ground_truth_compliant": false,
+        "predicted_compliant": false
+      },
+      {
+        "id": "eval_007",
+        "category": "rag_subtle",
+        "ground_truth_compliant": false,
+        "predicted_compliant": true
+      },
+      {
+        "id": "eval_008",
+        "category": "rag_subtle",
+        "ground_truth_compliant": false,
+        "predicted_compliant": false
+      },
+      {
+        "id": "eval_009",
+        "category": "rag_subtle",
+        "ground_truth_compliant": false,
+        "predicted_compliant": false
+      },
+      {
+        "id": "eval_010",
+        "category": "rag_subtle",
+        "ground_truth_compliant": false,
+        "predicted_compliant": true
+      },
+      {
+        "id": "eval_011",
+        "category": "rag_subtle",
+        "ground_truth_compliant": false,
+        "predicted_compliant": false
+      },
+      {
+        "id": "eval_012",
+        "category": "rag_subtle",
+        "ground_truth_compliant": false,
+        "predicted_compliant": false
+      },
+      {
+        "id": "eval_013",
+        "category": "rag_subtle",
+        "ground_truth_compliant": false,
+        "predicted_compliant": false
+      },
+      {
+        "id": "eval_014",
+        "category": "rag_subtle",
+        "ground_truth_compliant": false,
+        "predicted_compliant": false
+      },
+      {
+        "id": "eval_015",
+        "category": "rag_subtle",
+        "ground_truth_compliant": false,
+        "predicted_compliant": false
+      },
+      {
+        "id": "eval_016",
+        "category": "compliant",
+        "ground_truth_compliant": true,
+        "predicted_compliant": true
+      },
+      {
+        "id": "eval_017",
+        "category": "compliant",
+        "ground_truth_compliant": true,
+        "predicted_compliant": true
+      },
+      {
+        "id": "eval_018",
+        "category": "compliant",
+        "ground_truth_compliant": true,
+        "predicted_compliant": true
+      },
+      {
+        "id": "eval_019",
+        "category": "compliant",
+        "ground_truth_compliant": true,
+        "predicted_compliant": true
+      },
+      {
+        "id": "eval_020",
+        "category": "compliant",
+        "ground_truth_compliant": true,
+        "predicted_compliant": true
+      },
+      {
+        "id": "eval_021",
+        "category": "compliant",
+        "ground_truth_compliant": true,
+        "predicted_compliant": true
+      },
+      {
+        "id": "eval_022",
+        "category": "compliant",
+        "ground_truth_compliant": true,
+        "predicted_compliant": true
+      },
+      {
+        "id": "eval_023",
+        "category": "compliant",
+        "ground_truth_compliant": true,
+        "predicted_compliant": true
+      },
+      {
+        "id": "eval_024",
+        "category": "compliant",
+        "ground_truth_compliant": true,
+        "predicted_compliant": true
+      },
+      {
+        "id": "eval_025",
+        "category": "compliant",
+        "ground_truth_compliant": true,
+        "predicted_compliant": true
+      },
+      {
+        "id": "eval_026",
+        "category": "ambiguous",
+        "ground_truth_compliant": true,
+        "predicted_compliant": true
+      },
+      {
+        "id": "eval_027",
+        "category": "ambiguous",
+        "ground_truth_compliant": true,
+        "predicted_compliant": false
+      },
+      {
+        "id": "eval_028",
+        "category": "ambiguous",
+        "ground_truth_compliant": false,
+        "predicted_compliant": false
+      },
+      {
+        "id": "eval_029",
+        "category": "ambiguous",
+        "ground_truth_compliant": true,
+        "predicted_compliant": true
+      },
+      {
+        "id": "eval_030",
+        "category": "ambiguous",
+        "ground_truth_compliant": true,
+        "predicted_compliant": true
+      }
+    ],
+    "grounded_predictions": [
+      {
+        "id": "eval_006",
+        "category": "rag_subtle",
+        "ground_truth_compliant": false,
+        "predicted_compliant": false,
+        "cited_sections": [
+          "§11 Abs. 1 Nr. 2 HWG"
+        ]
+      },
+      {
+        "id": "eval_007",
+        "category": "rag_subtle",
+        "ground_truth_compliant": false,
+        "predicted_compliant": false,
+        "cited_sections": [
+          "§11 Abs. 1 Nr. 2 HWG"
+        ]
+      },
+      {
+        "id": "eval_008",
+        "category": "rag_subtle",
+        "ground_truth_compliant": false,
+        "predicted_compliant": false,
+        "cited_sections": [
+          "§11 Abs. 1 Nr. 1 HWG"
+        ]
+      },
+      {
+        "id": "eval_009",
+        "category": "rag_subtle",
+        "ground_truth_compliant": false,
+        "predicted_compliant": false,
+        "cited_sections": [
+          "§11 Abs. 1 Nr. 7 HWG"
+        ]
+      },
+      {
+        "id": "eval_010",
+        "category": "rag_subtle",
+        "ground_truth_compliant": false,
+        "predicted_compliant": false,
+        "cited_sections": [
+          "§11 Abs. 1 Nr. 9 HWG"
+        ]
+      },
+      {
+        "id": "eval_011",
+        "category": "rag_subtle",
+        "ground_truth_compliant": false,
+        "predicted_compliant": false,
+        "cited_sections": [
+          "§11 Abs. 2 HWG"
+        ]
+      },
+      {
+        "id": "eval_012",
+        "category": "rag_subtle",
+        "ground_truth_compliant": false,
+        "predicted_compliant": false,
+        "cited_sections": [
+          "§12 Abs. 1 Nr. 1 HWG"
+        ]
+      },
+      {
+        "id": "eval_013",
+        "category": "rag_subtle",
+        "ground_truth_compliant": false,
+        "predicted_compliant": false,
+        "cited_sections": [
+          "§3 Abs. 1 Nr. 1 HWG"
+        ]
+      },
+      {
+        "id": "eval_014",
+        "category": "rag_subtle",
+        "ground_truth_compliant": false,
+        "predicted_compliant": false,
+        "cited_sections": [
+          "§11 Abs. 1 Nr. 7 HWG"
+        ]
+      },
+      {
+        "id": "eval_015",
+        "category": "rag_subtle",
+        "ground_truth_compliant": false,
+        "predicted_compliant": false,
+        "cited_sections": [
+          "§9 HWG"
+        ]
+      },
+      {
+        "id": "eval_016",
+        "category": "compliant",
+        "ground_truth_compliant": true,
+        "predicted_compliant": false,
+        "cited_sections": [
+          "§1 Abs. 1 Nr. 2 a) HWG"
+        ]
+      },
+      {
+        "id": "eval_017",
+        "category": "compliant",
+        "ground_truth_compliant": true,
+        "predicted_compliant": false,
+        "cited_sections": [
+          "§11 Abs. 1 Nr. 2 HWG"
+        ]
+      },
+      {
+        "id": "eval_018",
+        "category": "compliant",
+        "ground_truth_compliant": true,
+        "predicted_compliant": true,
+        "cited_sections": []
+      },
+      {
+        "id": "eval_019",
+        "category": "compliant",
+        "ground_truth_compliant": true,
+        "predicted_compliant": false,
+        "cited_sections": [
+          "§4 Abs. 1 HWG"
+        ]
+      },
+      {
+        "id": "eval_020",
+        "category": "compliant",
+        "ground_truth_compliant": true,
+        "predicted_compliant": true,
+        "cited_sections": []
+      },
+      {
+        "id": "eval_021",
+        "category": "compliant",
+        "ground_truth_compliant": true,
+        "predicted_compliant": true,
+        "cited_sections": []
+      },
+      {
+        "id": "eval_022",
+        "category": "compliant",
+        "ground_truth_compliant": true,
+        "predicted_compliant": true,
+        "cited_sections": []
+      },
+      {
+        "id": "eval_023",
+        "category": "compliant",
+        "ground_truth_compliant": true,
+        "predicted_compliant": true,
+        "cited_sections": []
+      },
+      {
+        "id": "eval_024",
+        "category": "compliant",
+        "ground_truth_compliant": true,
+        "predicted_compliant": false,
+        "cited_sections": [
+          "§11 Abs. 1 Nr. 7 HWG"
+        ]
+      },
+      {
+        "id": "eval_025",
+        "category": "compliant",
+        "ground_truth_compliant": true,
+        "predicted_compliant": true,
+        "cited_sections": []
+      },
+      {
+        "id": "eval_026",
+        "category": "ambiguous",
+        "ground_truth_compliant": true,
+        "predicted_compliant": false,
+        "cited_sections": [
+          "§11 Abs. 1 Nr. 7 HWG"
+        ]
+      },
+      {
+        "id": "eval_027",
+        "category": "ambiguous",
+        "ground_truth_compliant": true,
+        "predicted_compliant": false,
+        "cited_sections": [
+          "§11 Abs. 1 Nr. 7 HWG"
+        ]
+      },
+      {
+        "id": "eval_028",
+        "category": "ambiguous",
+        "ground_truth_compliant": false,
+        "predicted_compliant": false,
+        "cited_sections": [
+          "§4 Abs. 1 HWG"
+        ]
+      },
+      {
+        "id": "eval_029",
+        "category": "ambiguous",
+        "ground_truth_compliant": true,
+        "predicted_compliant": false,
+        "cited_sections": [
+          "§3 Abs. 1 Nr. 1 HWG"
+        ]
+      },
+      {
+        "id": "eval_030",
+        "category": "ambiguous",
+        "ground_truth_compliant": true,
+        "predicted_compliant": false,
+        "cited_sections": [
+          "§11 Abs. 1 Nr. 7 HWG"
+        ]
+      }
+    ]
+  }
+}
