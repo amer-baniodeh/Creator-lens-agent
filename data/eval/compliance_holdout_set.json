@@ -1,0 +1,129 @@
+{
+  "description": "Holdout test set — drafted AFTER the §11 Abs. 1 Nr. 7 prompt fix, independently of the original compliance_labeled_set.json examples. None of these claims (or close paraphrases of them) were looked at while designing the fix, so this measures whether the accuracy improvement generalizes rather than overfitting to the original 30 examples.",
+  "categories": {
+    "blocklist": "Should be caught by the layer-1 regex blocklist alone.",
+    "rag_subtle": "Dodges the blocklist but violates a specific HWG/UWG provision.",
+    "compliant": "Genuinely compliant statements, several deliberately similar in risk profile to the testimonials the fix targeted, to test whether the fix generalizes rather than memorizing old phrasing."
+  },
+  "examples": [
+    {
+      "id": "holdout_001",
+      "claim": "Our night cream is clinically tested to erase fine lines.",
+      "ground_truth_compliant": false,
+      "category": "blocklist",
+      "rationale": "Contains 'clinically tested' — blocklisted unsubstantiated clinical claim."
+    },
+    {
+      "id": "holdout_002",
+      "claim": "100% effective solution, no side effects at all.",
+      "ground_truth_compliant": false,
+      "category": "blocklist",
+      "rationale": "Contains '100% effective' and 'no side effects' — blocklisted guarantee language."
+    },
+    {
+      "id": "holdout_003",
+      "claim": "My aesthetician says everyone in her clinic uses this daily.",
+      "ground_truth_compliant": false,
+      "category": "rag_subtle",
+      "rationale": "Recommendation from a health/beauty professional used in advertising — HWG §11 Abs. 1 Nr. 2."
+    },
+    {
+      "id": "holdout_004",
+      "claim": "Get a free full-size product with your first prescription order — limited time!",
+      "ground_truth_compliant": false,
+      "category": "rag_subtle",
+      "rationale": "Free sample/gift tied to a medicinal product order — HWG §11 Abs. 1 Nr. 14."
+    },
+    {
+      "id": "holdout_005",
+      "claim": "Without this in your routine, breakouts are basically guaranteed.",
+      "ground_truth_compliant": false,
+      "category": "rag_subtle",
+      "rationale": "Genuine promotional threat-framing: implies harm from non-use — HWG §11 Abs. 1 Nr. 7. Deliberately included to check the fix didn't over-correct into being too lenient on real Nr. 7 violations."
+    },
+    {
+      "id": "holdout_006",
+      "claim": "Check out these dramatic before-and-after shots from just 3 days of use.",
+      "ground_truth_compliant": false,
+      "category": "rag_subtle",
+      "rationale": "Before/after depiction likely to mislead about typical results — HWG §11 Abs. 1 Nr. 3/5."
+    },
+    {
+      "id": "holdout_007",
+      "claim": "Read what happened when I finally cured my psoriasis with this one product.",
+      "ground_truth_compliant": false,
+      "category": "rag_subtle",
+      "rationale": "Direct claim of curing a specific medical condition — misleading effect claim, HWG §3."
+    },
+    {
+      "id": "holdout_008",
+      "claim": "Enter our giveaway for a chance to win a year's supply — the more you use, the better your skin gets!",
+      "ground_truth_compliant": false,
+      "category": "rag_subtle",
+      "rationale": "Prize draw encouraging excessive/improper use — HWG §11 Abs. 1 Nr. 13."
+    },
+    {
+      "id": "holdout_009",
+      "claim": "I switched away from needing dermatologist visits after seeing how well this worked, no doctor needed anymore.",
+      "ground_truth_compliant": false,
+      "category": "rag_subtle",
+      "rationale": "Implies the product replaces professional medical care — a fresh paraphrase (not the exact blocklisted phrase) testing whether the RAG layer generalizes beyond literal blocklist matches."
+    },
+    {
+      "id": "holdout_010",
+      "claim": "This oil completely reversed my sun damage in one week.",
+      "ground_truth_compliant": false,
+      "category": "rag_subtle",
+      "rationale": "Implausible, fast, absolute efficacy claim — misleading effect claim under HWG §3."
+    },
+    {
+      "id": "holdout_011",
+      "claim": "Swipe up for 15% off with my code — don't forget this post is sponsored by the brand.",
+      "ground_truth_compliant": true,
+      "category": "compliant",
+      "rationale": "Commercial intent is explicitly disclosed ('sponsored') — satisfies UWG §5a Abs. 4."
+    },
+    {
+      "id": "holdout_012",
+      "claim": "Loving the texture of this new moisturizer, definitely adding it to my rotation.",
+      "ground_truth_compliant": true,
+      "category": "compliant",
+      "rationale": "Personal, first-person, subjective observation with no generalized promise to the reader."
+    },
+    {
+      "id": "holdout_013",
+      "claim": "Three weeks in and I'm noticing less redness, but I know everyone's skin reacts differently.",
+      "ground_truth_compliant": true,
+      "category": "compliant",
+      "rationale": "Explicitly hedges with individual variation — no guarantee. Tests generalization of the fix on new wording."
+    },
+    {
+      "id": "holdout_014",
+      "claim": "This cleanser smells amazing and doesn't strip my skin like some others I've tried.",
+      "ground_truth_compliant": true,
+      "category": "compliant",
+      "rationale": "Sensory/comparative personal observation, no medical or guarantee claim."
+    },
+    {
+      "id": "holdout_015",
+      "claim": "I appreciate that this brand lists every ingredient clearly on the box.",
+      "ground_truth_compliant": true,
+      "category": "compliant",
+      "rationale": "Factual packaging/transparency observation, unrelated to efficacy."
+    },
+    {
+      "id": "holdout_016",
+      "claim": "Just sharing my personal skincare shelf — not every product will work the same for you.",
+      "ground_truth_compliant": true,
+      "category": "compliant",
+      "rationale": "Explicit disclaimer against generalized promises."
+    },
+    {
+      "id": "holdout_017",
+      "claim": "Honestly this product's just okay for me, wouldn't say it's life changing.",
+      "ground_truth_compliant": true,
+      "category": "compliant",
+      "rationale": "Mild, neutral-to-negative personal review with no promotional or medical claim."
+    }
+  ]
+}
