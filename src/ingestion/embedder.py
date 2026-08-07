@@ -62,13 +62,18 @@ def embed_texts(texts: list[str]) -> list[list[float]]:
     return [item.embedding for item in response.data]
 
 
-def upsert_chunks(chunks: list[dict]) -> int:
+def upsert_chunks(chunks: list[dict], namespace: str = "") -> int:
     """
     Embed and upsert a list of chunk dicts to Pinecone.
 
     Args:
-        chunks: Output of transcript.chunk_transcript() —
-                list of {"text": str, "metadata": dict}
+        chunks: List of {"text": str, "metadata": dict}, optionally with an
+                explicit "id" key. Chunks without an "id" fall back to a
+                video_id + chunk_index hash (video transcript convention).
+        namespace: Pinecone namespace to upsert into. "" is the default
+                   namespace (used for video transcripts). Pass a separate
+                   namespace (e.g. "eu-regulations") to keep other corpora
+                   isolated from similarity search results.
 
     Returns:
         Total number of vectors upserted.
@@ -82,7 +87,7 @@ def upsert_chunks(chunks: list[dict]) -> int:
 
         vectors = [
             {
-                "id": _make_chunk_id(
+                "id": chunk.get("id") or _make_chunk_id(
                     chunk["metadata"]["video_id"],
                     chunk["metadata"]["chunk_index"],
                 ),
@@ -95,7 +100,7 @@ def upsert_chunks(chunks: list[dict]) -> int:
             for chunk, embedding in zip(batch, embeddings)
         ]
 
-        index.upsert(vectors=vectors)
+        index.upsert(vectors=vectors, namespace=namespace)
         total_upserted += len(vectors)
         logger.info(f"Upserted batch of {len(vectors)} vectors (total so far: {total_upserted})")
 

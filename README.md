@@ -46,7 +46,11 @@ In the Pinecone console, create an index with:
 jupyter notebook notebooks/
 ```
 
-Work through them in order: `01_ingestion` → `02_rag_chain` → `03_compliance` → `04_langsmith_eval`.
+Work through them in order: `01_ingestion` → `02_rag_chain` → `03_compliance` → `04_langsmith_eval` → `05_legal_rag`.
+
+`05_legal_rag` ingests real legal source text (see below) into a separate Pinecone
+namespace so compliance verdicts cite actual law instead of an LLM's unverified
+general knowledge. Run it at least once before relying on cited-section output.
 
 ### 5. Run the Streamlit app
 
@@ -104,6 +108,28 @@ copilot/
 ## Architecture
 
 See [docs/architecture.md](docs/architecture.md) for the full system diagram.
+
+## Legal corpus (RAG-grounded compliance)
+
+`check_compliance` used to fall back on an LLM classifier reasoning from general
+training knowledge of "EU law" — plausible-sounding but not citable or verifiable.
+It now retrieves real legal text from a separate Pinecone namespace (`eu-regulations`)
+and grounds every non-blocklist verdict in an actual cited provision (e.g. `§3 HWG`).
+
+**Currently ingested** (`data/legal/`, sourced from gesetze-im-internet.de):
+- HWG (Heilmittelwerbegesetz) — full text, all sections
+- §5a UWG (Irreführung durch Unterlassen)
+- §3a UWG (Rechtsbruch)
+
+**TODO — not yet ingested:**
+- [ ] EU Cosmetics Regulation 1223/2009, Article 20 (Product claims) — EUR-Lex
+      blocked automated fetches; needs a manual pull or an alternate mirror.
+- [ ] Cologne 2025 ruling summary — influencer/compliance case law referenced
+      as relevant but not yet sourced.
+
+To add a document: drop a `.txt` file into `data/legal/` (preserve `§ N` section
+markers on their own line for German-style laws), then add an entry to the
+`documents` list in notebook `05_legal_rag.ipynb` and re-run it.
 
 ## Deployment (Streamlit Cloud)
 

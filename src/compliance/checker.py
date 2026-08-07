@@ -1,16 +1,20 @@
 """
 checker.py
 ----------
-Compliance checker for EU healthcare advertising law.
+Compliance checker for German/EU healthcare advertising law.
 Two-layer approach:
   1. Fast: regex match against a forbidden-phrase blocklist.
-  2. LLM fallback: for ambiguous cases, ask GPT to classify the claim.
+  2. RAG-grounded LLM: for cases the blocklist misses, retrieve the actual
+     relevant legal provisions (HWG, UWG) from Pinecone and ask GPT to judge
+     compliance using ONLY that retrieved text — not its general training
+     knowledge of "EU law", which is unverified and can't be cited.
 
-Used by notebook 03 and the check_compliance agent tool.
+Used by notebook 03, notebook 05, and the check_compliance agent tool.
 """
 
 from __future__ import annotations
 
+import json
 import re
 
 from openai import OpenAI
@@ -20,9 +24,10 @@ from src.utils.logger import logger
 
 
 # ── Blocklist ─────────────────────────────────────────────────────────────────
-# Phrases that are categorically forbidden under EU health advertising law
-# (Directive 2001/83/EC and national transpositions like HWG in Germany).
-# Extend this list as you discover new edge cases.
+# Phrases that are categorically forbidden under German/EU health advertising
+# law (HWG, UWG, Directive 2001/83/EC). Extend this list as you discover new
+# edge cases. This is the fast, free, zero-latency first pass — real legal
+# grounding happens in layer 2 below.
 
 FORBIDDEN_PHRASES: list[str] = [
     # Cure / treatment claims
@@ -64,10 +69,10 @@ _BLOCKLIST_PATTERN = re.compile(
     re.IGNORECASE,
 )
 
-# ── LLM classifier prompt ─────────────────────────────────────────────────────
+# ── Ungrounded LLM classifier (fallback when no legal corpus is ingested) ─────
 _CLASSIFIER_SYSTEM_PROMPT = """
 You are a compliance expert in EU healthcare advertising law (Directive 2001/83/EC).
-Your job is to identify whether a piece of text makes any illegal or misleading 
+Your job is to identify whether a piece of text makes any illegal or misleading
 medical claims about a skincare product.
 
 A claim is non-compliant if it:
@@ -86,7 +91,8 @@ Respond ONLY with a JSON object in this exact format:
 
 
 def _llm_classify(text: str) -> dict:
-    """Use GPT to classify ambiguous compliance cases."""
+    """Ungrounded classifier — relies on GPT's general training knowledge.
+    Used only as a fallback when no legal corpus has been ingested yet."""
     client = OpenAI(api_key=OPENAI_API_KEY)
     response = client.chat.completions.create(
         model=OPENAI_LLM_MODEL,
@@ -97,24 +103,119 @@ def _llm_classify(text: str) -> dict:
         temperature=0,
         response_format={"type": "json_object"},
     )
-    import json
     return json.loads(response.choices[0].message.content)
+
+
+# ── RAG-grounded LLM classifier ────────────────────────────────────────────────
+_GROUNDED_CLASSIFIER_SYSTEM_PROMPT = """
+You are a compliance expert in German and EU healthcare advertising law.
+You will be given a piece of marketing/influencer content AND excerpts from
+the actual relevant legal provisions (e.g. HWG, UWG). Judge compliance using
+ONLY the provided legal excerpts — do not rely on general knowledge of the law.
+
+If the excerpts don't clearly cover the claim, say so honestly in "reason"
+rather than guessing, and set "compliant" based on the best reading of what
+was actually provided.
+
+Respond ONLY with a JSON object in this exact format:
+{
+  "compliant": true or false,
+  "reason": "one to two sentence explanation grounded in the cited provision(s)",
+  "cited_sections": ["§3 HWG", "§5a UWG"],
+  "flagged_phrases": ["phrase1", "phrase2"]
+}
+""".strip()
+
+
+def _retrieve_relevant_law(text: str, k: int = 3) -> list[dict]:
+    """
+    Embed the claim and retrieve the most relevant legal provisions from the
+    eu-regulations Pinecone namespace (populated by notebook 05 / legal_docs.py).
+
+    Returns an empty list if the legal corpus hasn't been ingested yet, or if
+    retrieval fails for any reason — callers should fall back gracefully.
+    """
+    from src.ingestion.embedder import embed_texts, _get_pinecone_index
+    from src.ingestion.legal_docs import LEGAL_NAMESPACE
+
+    try:
+        query_vec = embed_texts([text])[0]
+        index = _get_pinecone_index()
+        result = index.query(
+            vector=query_vec,
+            top_k=k,
+            namespace=LEGAL_NAMESPACE,
+            include_metadata=True,
+        )
+        return [
+            {
+                "law_name": m["metadata"].get("law_name", "Unknown"),
+                "section": m["metadata"].get("section", "?"),
+                "text": m["metadata"].get("text", ""),
+                "score": m["score"],
+            }
+            for m in result.get("matches", [])
+        ]
+    except Exception as e:
+        logger.warning(f"Legal RAG retrieval failed (has the legal corpus been ingested?): {e}")
+        return []
+
+
+def _llm_classify_grounded(text: str) -> dict:
+    """
+    RAG-grounded classifier: retrieves real legal text relevant to the claim,
+    then asks GPT to judge compliance citing specific provisions.
+    Falls back to the ungrounded classifier if no legal corpus is ingested yet.
+    """
+    relevant_law = _retrieve_relevant_law(text)
+
+    if not relevant_law:
+        result = _llm_classify(text)
+        result["cited_sections"] = []
+        result["grounded"] = False
+        return result
+
+    law_context = "\n\n".join(
+        f"[{law['section']} {law['law_name']}]\n{law['text']}"
+        for law in relevant_law
+    )
+
+    client = OpenAI(api_key=OPENAI_API_KEY)
+    response = client.chat.completions.create(
+        model=OPENAI_LLM_MODEL,
+        messages=[
+            {"role": "system", "content": _GROUNDED_CLASSIFIER_SYSTEM_PROMPT},
+            {
+                "role": "user",
+                "content": (
+                    f"Relevant legal provisions:\n{law_context}\n\n"
+                    f"Content to check:\n{text}"
+                ),
+            },
+        ],
+        temperature=0,
+        response_format={"type": "json_object"},
+    )
+    result = json.loads(response.choices[0].message.content)
+    result["grounded"] = True
+    return result
 
 
 def check_compliance(text: str, use_llm_fallback: bool = True) -> dict:
     """
-    Check a piece of text for EU health advertising compliance.
+    Check a piece of text for German/EU health advertising compliance.
 
     Args:
         text: The content to check (transcript chunk, creator script, brief draft).
-        use_llm_fallback: If True, run the LLM classifier even when no blocklist
-                          match is found, to catch subtle violations.
+        use_llm_fallback: If True, run the RAG-grounded LLM classifier even when
+                          no blocklist match is found, to catch subtle violations.
 
     Returns:
         {
             "compliant": bool,
             "flagged_phrases": list[str],
-            "source": "blocklist" | "llm" | "clean",
+            "cited_sections": list[str],
+            "source": "blocklist" | "llm_rag" | "llm" | "clean",
             "reason": str,
         }
     """
@@ -127,14 +228,16 @@ def check_compliance(text: str, use_llm_fallback: bool = True) -> dict:
         return {
             "compliant": False,
             "flagged_phrases": unique_matches,
+            "cited_sections": [],
             "source": "blocklist",
-            "reason": f"Text contains {len(unique_matches)} forbidden phrase(s) under EU health advertising law.",
+            "reason": f"Text contains {len(unique_matches)} forbidden phrase(s) under German/EU health advertising law.",
         }
 
-    # Layer 2: LLM classifier for edge cases
+    # Layer 2: RAG-grounded LLM classifier for edge cases
     if use_llm_fallback:
-        result = _llm_classify(text)
-        result["source"] = "llm"
+        result = _llm_classify_grounded(text)
+        result["source"] = "llm_rag" if result.get("grounded") else "llm"
+        result.setdefault("cited_sections", [])
         if not result["compliant"]:
             logger.warning(f"LLM compliance flag: {result['reason']}")
         return result
@@ -143,6 +246,7 @@ def check_compliance(text: str, use_llm_fallback: bool = True) -> dict:
     return {
         "compliant": True,
         "flagged_phrases": [],
+        "cited_sections": [],
         "source": "clean",
         "reason": "No forbidden phrases detected.",
     }
@@ -158,9 +262,16 @@ def compliance_report(text: str) -> str:
     if result["compliant"]:
         return "✅ Compliant. No forbidden phrases or illegal claims detected."
 
-    phrases = ", ".join(f'"{p}"' for p in result["flagged_phrases"])
-    return (
-        f"🚨 Non-compliant (detected by {result['source']}).\n"
-        f"Reason: {result['reason']}\n"
-        f"Flagged phrases: {phrases}"
-    )
+    phrases = ", ".join(f'"{p}"' for p in result.get("flagged_phrases", []))
+    sections = ", ".join(result.get("cited_sections", []))
+
+    lines = [
+        f"🚨 Non-compliant (detected by {result['source']}).",
+        f"Reason: {result['reason']}",
+    ]
+    if sections:
+        lines.append(f"Relevant law: {sections}")
+    if phrases:
+        lines.append(f"Flagged phrases: {phrases}")
+
+    return "\n".join(lines)
