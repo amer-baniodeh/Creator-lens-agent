@@ -147,17 +147,39 @@ reachable within the small number of chunks pulled per query.
 that generation quality is solid and retrieval is the thing to improve as the video
 corpus grows — a much more specific target than "RAG quality" in the abstract.
 
+## 10. Growing the corpus — retrieval degrades exactly as predicted
+
+Ingested 6 more real skincare videos (English and German, different creators and
+topics) to directly test the previous entry's hypothesis: does retrieval hold up as
+more content is added? Re-ran the identical 10 questions from the baseline RAG eval
+against the larger corpus (5 → 11 videos) as a controlled before/after comparison.
+
+**What it found:** retrieval hit rate dropped from 90% to 60%. Two questions that
+previously retrieved the correct video were completely crowded out once more,
+topically-similar content existed to compete with — both affecting short videos with
+few chunks, which get statistically outnumbered by longer new videos in similarity
+search. Faithfulness also dipped slightly, revealing a new risk category: when
+retrieval misses the target video entirely, the model can still confidently attribute
+an answer to the expected source name rather than admitting it wasn't found.
+
+**Why this matters:** this is no longer a prediction — it's measured evidence that the
+current fixed top-5 retrieval will not scale as the corpus grows toward the target of
+20+ videos, without some form of improvement (larger k, reranking, or better filtering).
+Gives a concrete, evidenced problem to solve rather than a vague "improve RAG" goal.
+
 ## Current state (updated as of the most recent entry above)
 
 - **Compliance checker:** grounded in real law, evaluated, ~94-97% accurate on hand-
   labeled claims across two independent test sets.
 - **Cost/latency:** near-negligible cost at current scale (sub-cent for all testing so
   far); full chat turn averages ~8-9 seconds.
-- **RAG quality:** generation is fully faithful (no hallucination); retrieval is the
-  known bottleneck, particularly across languages and for longer videos.
+- **RAG quality:** generation remains highly faithful; retrieval is the confirmed
+  bottleneck and measurably degrades as the corpus grows (90%→60% hit rate after
+  doubling the video count) — the clearest concrete next improvement to make.
+- **Corpus:** 11 videos ingested (up from 5), mix of English and German content.
 - **Known gaps:** one known compliance recall miss (a professional-endorsement claim
   type) identified but not yet fixed.
-- **Not yet done:** a broader ingested video corpus (retrieval quality can't be properly
-  judged until this grows — currently 5 videos), YouTube ingestion on the cloud-hosted
-  version is still blocked (paste-transcript workaround in place), a non-technical user
-  test, and final presentation slides/rehearsal.
+- **Not yet done:** improving retrieval to handle a larger corpus (now evidenced as
+  necessary, not just anticipated), YouTube ingestion on the cloud-hosted version is
+  still blocked (paste-transcript workaround in place), a non-technical user test, and
+  final presentation slides/rehearsal.
