@@ -107,6 +107,37 @@ def upsert_chunks(chunks: list[dict], namespace: str = "") -> int:
     return total_upserted
 
 
+def get_video_transcript(video_id: str, max_chunks: int = 200) -> str:
+    """
+    Retrieve and reassemble the full transcript for a specific ingested video,
+    ordered by chunk_index.
+
+    Unlike similarity search (which returns only the top-K chunks most
+    relevant to a query), this pulls every chunk belonging to one video via
+    a Pinecone metadata filter — used for whole-video compliance/narrative
+    analysis where partial context would miss things.
+
+    Returns "" if the video has no chunks in the index.
+    """
+    index = _get_pinecone_index()
+    # Any non-zero query vector works here — results are selected by the
+    # metadata filter, not by similarity, so the probe text is arbitrary.
+    probe_vector = embed_texts([" "])[0]
+
+    result = index.query(
+        vector=probe_vector,
+        filter={"video_id": {"$eq": video_id}},
+        top_k=max_chunks,
+        include_metadata=True,
+    )
+    matches = result.get("matches", [])
+    if not matches:
+        return ""
+
+    matches.sort(key=lambda m: m["metadata"].get("chunk_index", 0))
+    return " ".join(m["metadata"].get("text", "") for m in matches)
+
+
 def ingest_transcript(text: str, title: str, channel: str = "Unknown", url: str = "") -> dict:
     """
     Ingest a raw transcript string (no YouTube API call).
@@ -133,6 +164,8 @@ def ingest_transcript(text: str, title: str, channel: str = "Unknown", url: str 
         "url": url,
         "chunk_count": len(chunks),
         "vectors_upserted": vectors_upserted,
+        # Pasted transcripts have no real YouTube video ID, so no thumbnail.
+        "thumbnail_url": None,
     }
 
 
@@ -149,13 +182,15 @@ def ingest_video(url: str, title: str | None = None) -> dict:
     chunks = process_video(url, title)
     vectors_upserted = upsert_chunks(chunks)
 
+    video_id = chunks[0]["metadata"]["video_id"]
     summary = {
-        "video_id": chunks[0]["metadata"]["video_id"],
+        "video_id": video_id,
         "title": chunks[0]["metadata"]["title"],
         "channel": chunks[0]["metadata"].get("channel", "Unknown channel"),
         "url": url,
         "chunk_count": len(chunks),
         "vectors_upserted": vectors_upserted,
+        "thumbnail_url": f"https://img.youtube.com/vi/{video_id}/hqdefault.jpg",
     }
 
     logger.info(f"Ingestion complete: {summary}")

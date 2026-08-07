@@ -5,6 +5,7 @@ Streamlit UI for the Creative Intelligence Copilot.
 Run with: streamlit run app/app.py
 """
 
+import html
 import sys
 from pathlib import Path
 
@@ -12,6 +13,7 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT))
 
 import streamlit as st
+from langchain_core.callbacks import BaseCallbackHandler
 
 from src.agent.agent import get_agent
 from src.utils.logger import logger
@@ -21,6 +23,84 @@ st.set_page_config(
     page_title="Creative Intelligence Copilot",
     page_icon="🎯",
     layout="wide",
+)
+
+_AVATARS = {"assistant": "✨", "user": "🧑‍💻"}
+
+SUGGESTED_QUESTIONS = [
+    "Summarize compliance issues across all videos",
+    "What hooks are the creators using?",
+    "Which claims need revision?",
+]
+
+# ── Custom CSS (dark + violet, card-based layout) ──────────────────────────────
+st.markdown(
+    """
+    <style>
+    .stApp { font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif; }
+
+    /* Header */
+    .app-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 4px 0 20px 0;
+      border-bottom: 1px solid rgba(139,124,246,0.15);
+      margin-bottom: 20px;
+    }
+    .app-logo {
+      width: 40px; height: 40px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #8B7CF6, #5B4FD6);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; color: #fff;
+      box-shadow: 0 0 20px rgba(139,124,246,0.4);
+      flex-shrink: 0;
+    }
+    .app-title { font-size: 22px; font-weight: 700; color: #F0EEFA; letter-spacing: -0.3px; }
+    .app-subtitle { font-size: 13px; color: #9C9AB0; margin-top: 2px; }
+
+    /* Compliance card */
+    .compliance-card { border-radius: 14px; padding: 16px 18px; margin: 8px 0; border: 1px solid; background: #17171F; }
+    .compliance-card.badge-compliant { border-color: rgba(74,222,128,0.3); background: rgba(74,222,128,0.06); }
+    .compliance-card.badge-violation { border-color: rgba(248,113,113,0.3); background: rgba(248,113,113,0.06); }
+    .compliance-card-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+    .compliance-icon { font-size: 16px; }
+    .compliance-badge { font-size: 11px; font-weight: 700; letter-spacing: 0.06em; padding: 3px 10px; border-radius: 20px; text-transform: uppercase; }
+    .compliance-badge.badge-compliant { background: rgba(74,222,128,0.15); color: #4ADE80; }
+    .compliance-badge.badge-violation { background: rgba(248,113,113,0.15); color: #F87171; }
+    .compliance-source { font-size: 11px; color: #7A7890; margin-left: auto; font-family: 'SF Mono', Menlo, monospace; }
+    .compliance-reason { font-size: 13.5px; color: #D4D2E0; line-height: 1.55; margin-bottom: 10px; }
+    .chip-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+    .chip { font-size: 11px; padding: 3px 10px; border-radius: 20px; font-family: 'SF Mono', Menlo, monospace; }
+    .chip-section { background: rgba(139,124,246,0.15); color: #B4A8FA; }
+    .chip-phrase { background: rgba(248,113,113,0.12); color: #F5A3A3; font-style: italic; }
+
+    /* Knowledge base cards */
+    .kb-card { display: flex; gap: 10px; align-items: center; padding: 8px; border-radius: 12px; background: #17171F; border: 1px solid rgba(255,255,255,0.06); margin-bottom: 8px; }
+    .kb-thumb, .kb-thumb-placeholder { width: 64px; height: 42px; border-radius: 8px; object-fit: cover; flex-shrink: 0; }
+    .kb-thumb-placeholder { background: linear-gradient(135deg, #2A2740, #1B1926); display: flex; align-items: center; justify-content: center; font-size: 18px; }
+    .kb-info { min-width: 0; flex: 1; }
+    .kb-title { font-size: 12.5px; font-weight: 600; color: #E8E6F0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .kb-channel { font-size: 11px; color: #8A88A0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .kb-meta { font-size: 10.5px; color: #6C6A80; display: flex; align-items: center; gap: 5px; margin-top: 2px; }
+    .kb-dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
+    .kb-dot.dot-compliant { background: #4ADE80; }
+    .kb-dot.dot-violation { background: #F87171; }
+    .kb-dot.dot-unknown { background: #5A5870; }
+
+    /* Legal corpus badges */
+    .legal-badge-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+    .legal-badge { font-size: 10.5px; padding: 3px 9px; border-radius: 20px; background: rgba(139,124,246,0.12); color: #B4A8FA; font-family: 'SF Mono', Menlo, monospace; }
+
+    /* Suggested question chips */
+    .suggested-label { font-size: 11px; color: #7A7890; text-transform: uppercase; letter-spacing: 0.06em; margin: 6px 0 8px; }
+
+    /* Alerts polish */
+    [data-testid="stAlert"] { border-radius: 14px !important; }
+    </style>
+    """,
+    unsafe_allow_html=True,
 )
 
 
@@ -50,21 +130,9 @@ def _ensure_legal_corpus() -> dict:
     logger.info(f"Legal corpus empty — auto-ingesting bundled documents into '{LEGAL_NAMESPACE}'")
     legal_dir = REPO_ROOT / "data" / "legal"
     documents = [
-        {
-            "file_path": str(legal_dir / "hwg.txt"),
-            "law_name": "HWG",
-            "source_url": "https://www.gesetze-im-internet.de/heilmwerbg/",
-        },
-        {
-            "file_path": str(legal_dir / "uwg_5a.txt"),
-            "law_name": "UWG",
-            "source_url": "https://www.gesetze-im-internet.de/uwg_2004/__5a.html",
-        },
-        {
-            "file_path": str(legal_dir / "uwg_3a.txt"),
-            "law_name": "UWG",
-            "source_url": "https://www.gesetze-im-internet.de/uwg_2004/__3a.html",
-        },
+        {"file_path": str(legal_dir / "hwg.txt"), "law_name": "HWG", "source_url": "https://www.gesetze-im-internet.de/heilmwerbg/"},
+        {"file_path": str(legal_dir / "uwg_5a.txt"), "law_name": "UWG", "source_url": "https://www.gesetze-im-internet.de/uwg_2004/__5a.html"},
+        {"file_path": str(legal_dir / "uwg_3a.txt"), "law_name": "UWG", "source_url": "https://www.gesetze-im-internet.de/uwg_2004/__3a.html"},
     ]
 
     total = 0
@@ -93,7 +161,28 @@ if "ingested_videos" not in st.session_state:
     st.session_state.ingested_videos = []
 
 
-def _run_agent(prompt: str) -> str:
+# ── Tool-status callback (agent "thinking" steps) ──────────────────────────────
+_TOOL_STATUS_LABELS = {
+    "ingest_video": "📥 Ingesting video...",
+    "query_corpus": "🔍 Searching transcripts...",
+    "check_compliance": "⚖️ Checking compliance...",
+}
+
+
+class _ToolStatusCallback(BaseCallbackHandler):
+    """Updates a Streamlit placeholder as the agent calls each tool, so the
+    user sees what's happening instead of a generic spinner."""
+
+    def __init__(self, placeholder):
+        self.placeholder = placeholder
+
+    def on_tool_start(self, serialized, input_str, **kwargs):
+        name = serialized.get("name", "")
+        label = _TOOL_STATUS_LABELS.get(name, f"🔧 Running {name}...")
+        self.placeholder.markdown(label)
+
+
+def _run_agent(prompt: str, status_placeholder=None) -> str:
     """Run the agent with knowledge base context injected."""
     kb_context = ""
     if st.session_state.ingested_videos:
@@ -106,54 +195,183 @@ def _run_agent(prompt: str) -> str:
             "Use query_corpus to search their transcripts. "
             "Always cite the video title, channel name, and URL in your answer.]\n\n"
         )
-    return st.session_state.agent.invoke(
-        {"input": kb_context + prompt}
-    ).get("output", "No response generated.")
 
-
-def _auto_summary(summary: dict) -> str:
-    """Generate an automatic analysis of a freshly ingested video."""
-    title = summary["title"]
-    channel = summary.get("channel", "Unknown")
-    url = summary.get("url", "N/A")
-
-    prompt = (
-        f'I just ingested the video "{title}" by {channel} ({url}). '
-        "Please analyse it by doing the following:\n"
-        "1. Use query_corpus to retrieve transcript content from this specific video.\n"
-        "2. Use check_compliance on the retrieved content to check for EU healthcare advertising violations.\n"
-        "3. Provide a structured summary with these sections:\n\n"
-        f"**Video:** {title} by {channel}\n"
-        f"**URL:** {url}\n\n"
-        "**Compliance:** Are there any compliance issues? List any flagged phrases.\n\n"
-        "**Narrative structure:** What is the story arc? (e.g. problem → journey → solution, "
-        "before/after, testimonial, educational)\n\n"
-        "**Brand fit:** Based on the content and tone, is this creator a good fit for a "
-        "prescription skincare brand? Any concerns?\n\n"
-        "**Key quotes:** Pull 2-3 notable quotes from the transcript.\n\n"
-        "Keep it concise and actionable."
+    callbacks = [_ToolStatusCallback(status_placeholder)] if status_placeholder else []
+    response = st.session_state.agent.invoke(
+        {"input": kb_context + prompt},
+        config={"callbacks": callbacks},
     )
-    return _run_agent(prompt)
+    return response.get("output", "No response generated.")
+
+
+# ── Structured video analysis (compliance + narrative + brand fit + quotes) ───
+
+def _run_video_analysis(summary: dict, status_ph) -> dict:
+    """Direct (non-agentic) analysis pipeline for a freshly ingested video —
+    returns structured data so the UI can render cards instead of prose."""
+    from src.ingestion.embedder import get_video_transcript
+    from src.agent.analysis import analyze_video
+    from src.compliance.checker import check_compliance
+
+    status_ph.markdown("📄 Retrieving transcript...")
+    transcript = get_video_transcript(summary["video_id"]) or ""
+
+    status_ph.markdown("⚖️ Checking compliance against German/EU law...")
+    compliance = check_compliance(transcript)
+
+    status_ph.markdown("📖 Analysing narrative & brand fit...")
+    analysis = analyze_video(transcript, summary["title"], summary.get("channel", "Unknown"))
+
+    return {
+        "compliance": compliance,
+        "narrative": analysis.get("narrative_structure", ""),
+        "brand_fit": analysis.get("brand_fit", ""),
+        "quotes": analysis.get("key_quotes", []),
+    }
 
 
 def _handle_ingestion(summary: dict):
-    """Store ingestion result and run auto-summary."""
+    """Store ingestion result and run structured analysis."""
+    summary["compliance_status"] = None
     st.session_state.ingested_videos.append(summary)
     st.success(
         f"Ingested **{summary['title']}** "
         f"by **{summary.get('channel', 'Unknown')}** — "
         f"{summary['chunk_count']} chunks"
     )
-    with st.spinner("Analysing video for compliance, narrative & brand fit..."):
+
+    status_ph = st.empty()
+    try:
+        result = _run_video_analysis(summary, status_ph)
+        status_ph.empty()
+
+        summary["compliance_status"] = "compliant" if result["compliance"]["compliant"] else "violation"
+
+        st.session_state.messages.append({
+            "role": "assistant",
+            "type": "video_analysis",
+            "video": {
+                "title": summary["title"],
+                "channel": summary.get("channel", "Unknown"),
+                "url": summary.get("url", ""),
+            },
+            "compliance": result["compliance"],
+            "narrative": result["narrative"],
+            "brand_fit": result["brand_fit"],
+            "quotes": result["quotes"],
+        })
+        st.rerun()
+    except Exception as e:
+        status_ph.empty()
+        logger.error(f"Video analysis failed: {e}")
+        st.warning(f"Analysis failed: {e}")
+
+
+# ── Rendering helpers ────────────────────────────────────────────────────────
+
+def _compliance_card_html(result: dict) -> str:
+    compliant = result.get("compliant", True)
+    badge_class = "badge-compliant" if compliant else "badge-violation"
+    badge_text = "COMPLIANT" if compliant else "VIOLATION"
+    icon = "✅" if compliant else "🚨"
+
+    sections_html = "".join(
+        f'<span class="chip chip-section">{html.escape(s)}</span>'
+        for s in result.get("cited_sections", [])
+    )
+    phrases_html = "".join(
+        f'<span class="chip chip-phrase">&quot;{html.escape(p)}&quot;</span>'
+        for p in result.get("flagged_phrases", [])
+    )
+
+    return f"""
+    <div class="compliance-card {badge_class}">
+      <div class="compliance-card-header">
+        <span class="compliance-icon">{icon}</span>
+        <span class="compliance-badge {badge_class}">{badge_text}</span>
+        <span class="compliance-source">via {html.escape(result.get('source', 'unknown'))}</span>
+      </div>
+      <div class="compliance-reason">{html.escape(result.get('reason', ''))}</div>
+      {f'<div class="chip-row">{sections_html}</div>' if sections_html else ''}
+      {f'<div class="chip-row">{phrases_html}</div>' if phrases_html else ''}
+    </div>
+    """
+
+
+def _render_video_analysis_message(msg: dict):
+    video = msg["video"]
+    st.markdown(f"**Analysis: {video['title']}**")
+    st.caption(f"by {video.get('channel', 'Unknown')}")
+
+    tabs = st.tabs(["⚖️ Compliance", "📖 Narrative", "🎯 Brand Fit", "💬 Quotes"])
+    with tabs[0]:
+        st.markdown(_compliance_card_html(msg["compliance"]), unsafe_allow_html=True)
+    with tabs[1]:
+        st.markdown(msg["narrative"] or "No narrative analysis available.")
+    with tabs[2]:
+        st.markdown(msg["brand_fit"] or "No brand fit analysis available.")
+    with tabs[3]:
+        quotes = msg.get("quotes") or []
+        if quotes:
+            for q in quotes:
+                st.markdown(f"> {q}")
+        else:
+            st.caption("No quotes extracted.")
+
+
+def _kb_card_html(v: dict) -> str:
+    thumb = v.get("thumbnail_url")
+    thumb_html = (
+        f'<img class="kb-thumb" src="{thumb}" />'
+        if thumb else '<div class="kb-thumb-placeholder">📝</div>'
+    )
+    dot_class = {
+        "compliant": "dot-compliant",
+        "violation": "dot-violation",
+    }.get(v.get("compliance_status"), "dot-unknown")
+
+    title = html.escape(v.get("title", ""))
+    channel = html.escape(v.get("channel", "Unknown"))
+
+    return f"""
+    <div class="kb-card">
+      {thumb_html}
+      <div class="kb-info">
+        <div class="kb-title">{title}</div>
+        <div class="kb-channel">{channel}</div>
+        <div class="kb-meta"><span class="kb-dot {dot_class}"></span>{v.get('chunk_count', 0)} chunks</div>
+      </div>
+    </div>
+    """
+
+
+def _handle_user_turn(user_input: str):
+    """Shared logic for both the chat input box and suggested-question chips."""
+    st.session_state.messages.append({"role": "user", "type": "text", "content": user_input})
+    with st.chat_message("user", avatar=_AVATARS["user"]):
+        st.markdown(user_input)
+
+    with st.chat_message("assistant", avatar=_AVATARS["assistant"]):
+        status_ph = st.empty()
+        status_ph.markdown("🤔 Thinking...")
         try:
-            analysis = _auto_summary(summary)
-            st.session_state.messages.append({
-                "role": "assistant",
-                "content": analysis,
-            })
-            st.rerun()
+            answer = _run_agent(user_input, status_ph)
         except Exception as e:
-            logger.error(f"Auto-summary failed: {e}")
+            answer = f"Error: {e}"
+            logger.error(f"Agent error: {e}")
+        status_ph.empty()
+
+        msg_data = {"role": "assistant", "type": "text", "content": answer}
+        if "🚨" in answer or "Non-compliant" in answer:
+            st.error(answer)
+            msg_data["is_compliance_flag"] = True
+        elif "✅" in answer or "Compliant" in answer:
+            st.success(answer)
+            msg_data["is_compliance_pass"] = True
+        else:
+            st.markdown(answer)
+
+    st.session_state.messages.append(msg_data)
 
 
 # ── Sidebar ──────────────────────────────────────────────────────────────────
@@ -214,63 +432,62 @@ with st.sidebar:
         st.markdown("---")
         st.markdown("### Knowledge base")
         for v in st.session_state.ingested_videos:
-            channel = v.get("channel", "Unknown")
-            url = v.get("url", "")
-            url_line = f"  `{url}`" if url else ""
-            st.markdown(
-                f"- **{v['title']}** by *{channel}*  \n"
-                f"  {v['chunk_count']} chunks{url_line}"
-            )
+            st.markdown(_kb_card_html(v), unsafe_allow_html=True)
 
     st.markdown("---")
     with st.expander("Legal corpus status"):
         status = _legal_corpus_status.get("status")
         count = _legal_corpus_status.get("vector_count", 0)
-        if status == "already_present":
-            st.caption(f"✅ {count} legal provisions loaded (HWG, UWG §5a, §3a)")
-        elif status == "ingested":
-            st.caption(f"✅ Auto-ingested {count} legal provisions on startup")
+        if status in ("already_present", "ingested"):
+            verb = "Loaded" if status == "already_present" else "Auto-ingested"
+            st.caption(f"✅ {verb} {count} legal provisions")
+            st.markdown(
+                '<div class="legal-badge-row">'
+                '<span class="legal-badge">HWG</span>'
+                '<span class="legal-badge">UWG §5a</span>'
+                '<span class="legal-badge">UWG §3a</span>'
+                '</div>',
+                unsafe_allow_html=True,
+            )
         else:
             st.caption(f"⚠️ Legal corpus unavailable — {_legal_corpus_status.get('error', 'unknown error')}")
             st.caption("Compliance checks will fall back to ungrounded LLM judgment.")
 
 # ── Main chat area ───────────────────────────────────────────────────────────
-st.markdown("## Creative Intelligence Copilot")
-st.caption("Ingest a YouTube video to get an automatic compliance, narrative, and brand-fit analysis — then ask follow-up questions.")
+st.markdown(
+    """
+    <div class="app-header">
+      <div class="app-logo">◆</div>
+      <div>
+        <div class="app-title">Creative Intelligence Copilot</div>
+        <div class="app-subtitle">RAG-grounded creative &amp; compliance analysis for influencer marketing</div>
+      </div>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
 
 # Chat history display
 for msg in st.session_state.messages:
-    with st.chat_message(msg["role"]):
-        if msg.get("is_compliance_flag"):
+    with st.chat_message(msg["role"], avatar=_AVATARS.get(msg["role"])):
+        if msg.get("type") == "video_analysis":
+            _render_video_analysis_message(msg)
+        elif msg.get("is_compliance_flag"):
             st.error(msg["content"])
         elif msg.get("is_compliance_pass"):
             st.success(msg["content"])
         else:
             st.markdown(msg["content"])
 
+# Suggested question chips
+if st.session_state.ingested_videos:
+    st.markdown('<div class="suggested-label">Try asking</div>', unsafe_allow_html=True)
+    cols = st.columns(len(SUGGESTED_QUESTIONS))
+    for col, question in zip(cols, SUGGESTED_QUESTIONS):
+        with col:
+            if st.button(question, use_container_width=True, key=f"chip_{question}"):
+                _handle_user_turn(question)
+
 # Chat input
 if user_input := st.chat_input("Ask a question about your content..."):
-    st.session_state.messages.append({"role": "user", "content": user_input})
-
-    with st.chat_message("user"):
-        st.markdown(user_input)
-
-    with st.chat_message("assistant"):
-        with st.spinner("Thinking..."):
-            try:
-                answer = _run_agent(user_input)
-            except Exception as e:
-                answer = f"Error: {e}"
-                logger.error(f"Agent error: {e}")
-
-        msg_data = {"role": "assistant", "content": answer}
-        if "🚨" in answer or "Non-compliant" in answer:
-            st.error(answer)
-            msg_data["is_compliance_flag"] = True
-        elif "✅" in answer or "Compliant" in answer:
-            st.success(answer)
-            msg_data["is_compliance_pass"] = True
-        else:
-            st.markdown(answer)
-
-    st.session_state.messages.append(msg_data)
+    _handle_user_turn(user_input)
