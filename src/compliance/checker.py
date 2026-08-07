@@ -125,6 +125,26 @@ If the excerpts don't clearly cover the claim, say so honestly in "reason"
 rather than guessing, and set "compliant" based on the best reading of what
 was actually provided.
 
+IMPORTANT — do not over-apply §11 Abs. 1 Nr. 7 HWG (health improved by use /
+harmed by non-use). That provision targets GENERALIZED PROMOTIONAL PROMISES
+about what will happen to the reader — not a first-person account of one
+person's own subjective experience. A personal testimonial is only a
+violation if it generalizes into a promise ("this WILL work for you") or
+pairs with an explicit before/after or guarantee framing. Merely describing
+how a product felt or worked for the speaker is NOT, by itself, a claim that
+health is improved through use.
+
+Examples (for calibration, not literal matches):
+- COMPLIANT: "My skin feels softer since I started using this." — a personal,
+  hedged, first-person observation. No generalized promise to the reader.
+- COMPLIANT: "Results vary by skin type, but I noticed a difference in a
+  few days." — explicitly hedges instead of promising an outcome.
+- NON-COMPLIANT: "Use this or your skin will only get worse." — generalizes
+  into a promotional promise/threat directed at the reader, not a personal
+  account.
+- NON-COMPLIANT: "Trust me, this WILL work for you." — direct guaranteed-
+  outcome promise to the reader.
+
 Respond ONLY with a JSON object in this exact format:
 {
   "compliant": true or false,
