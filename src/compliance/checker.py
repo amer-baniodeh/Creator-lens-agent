@@ -113,6 +113,14 @@ You will be given a piece of marketing/influencer content AND excerpts from
 the actual relevant legal provisions (e.g. HWG, UWG). Judge compliance using
 ONLY the provided legal excerpts — do not rely on general knowledge of the law.
 
+The provided excerpts include internal numbering (Absatz numbers like "(1)",
+"(2)", and numbered points like "1.", "2.", "9."). Cite the MOST SPECIFIC
+sub-provision that supports your verdict, not just the top-level section —
+e.g. "§11 Abs. 1 Nr. 9 HWG" (a specific numbered point), not just "§11 HWG".
+If the violation spans a whole Absatz with no single numbered point fitting
+cleanly, cite the Absatz — e.g. "§3 Abs. 1 HWG". Only fall back to a bare
+section number ("§5a UWG") when the provision has no internal sub-numbering.
+
 If the excerpts don't clearly cover the claim, say so honestly in "reason"
 rather than guessing, and set "compliant" based on the best reading of what
 was actually provided.
@@ -121,7 +129,7 @@ Respond ONLY with a JSON object in this exact format:
 {
   "compliant": true or false,
   "reason": "one to two sentence explanation grounded in the cited provision(s)",
-  "cited_sections": ["§3 HWG", "§5a UWG"],
+  "cited_sections": ["§11 Abs. 1 Nr. 9 HWG", "§5a Abs. 4 UWG"],
   "flagged_phrases": ["phrase1", "phrase2"]
 }
 """.strip()
