@@ -12,61 +12,85 @@
       "id": "rag_001",
       "question": "What does the Formel Skin process involve before a customer receives their products?",
       "expected_answer_criteria": "Should mention an online consultation/questionnaire about skin, concerns, and goals, and uploading photos, leading to a personalized recommendation.",
-      "expected_video_ids": ["8Uf8HaUMmyk", "3f1452a3788", "DH2z3BkknSQ"]
+      "expected_video_ids": [
+        "8Uf8HaUMmyk",
+        "3f1452a3788",
+        "DH2z3BkknSQ"
+      ]
     },
     {
       "id": "rag_002",
       "question": "In the 'Formel Skin review' video, does the creator give any medical disclaimer?",
       "expected_answer_criteria": "Yes — advises viewers with specific skin concerns or medical conditions to talk to a qualified healthcare professional.",
-      "expected_video_ids": ["3f1452a3788"]
+      "expected_video_ids": [
+        "3f1452a3788"
+      ]
     },
     {
       "id": "rag_003",
       "question": "What date does the creator in 'TEST 44' mention starting this part of her skincare journey?",
       "expected_answer_criteria": "October 14th (14. Oktober).",
-      "expected_video_ids": ["8Uf8HaUMmyk"]
+      "expected_video_ids": [
+        "8Uf8HaUMmyk"
+      ]
     },
     {
       "id": "rag_004",
       "question": "According to 'FORMEL Skin Erfahrungen', how long has the creator been using the product?",
       "expected_answer_criteria": "About one year.",
-      "expected_video_ids": ["G9C2J_QuyDQ"]
+      "expected_video_ids": [
+        "G9C2J_QuyDQ"
+      ]
     },
     {
       "id": "rag_005",
       "question": "In the 'test 3' video, what habit gets rated 0 out of 10?",
       "expected_answer_criteria": "Putting toothpaste on pimples (Zahnpasta auf Pickel schmieren) is rated 0/10. Not using sunscreen out of fear of breakouts is also rated 0/10 — either is an acceptable correct answer.",
-      "expected_video_ids": ["ACTsF3JxOhk"]
+      "expected_video_ids": [
+        "ACTsF3JxOhk"
+      ]
     },
     {
       "id": "rag_006",
       "question": "Is a discount code or promotion mentioned in any of the videos? If so, which one?",
-      "expected_answer_criteria": "Yes — 'Neue Kooperation – FORMEL SKIN!' mentions a discount voucher/code.",
-      "expected_video_ids": ["DH2z3BkknSQ"]
+      "expected_answer_criteria": "Yes — both \"Neue Kooperation – FORMEL SKIN!\" and \"TEST 44\" mention a discount/voucher code.",
+      "expected_video_ids": [
+        "DH2z3BkknSQ",
+        "8Uf8HaUMmyk"
+      ]
     },
     {
       "id": "rag_007",
       "question": "What kind of skin does the creator in 'FORMEL Skin Erfahrungen' describe having?",
       "expected_answer_criteria": "Sensitive skin (sensible Haut), and mentions years of unsuccessfully searching for a product that worked.",
-      "expected_video_ids": ["G9C2J_QuyDQ"]
+      "expected_video_ids": [
+        "G9C2J_QuyDQ"
+      ]
     },
     {
       "id": "rag_008",
       "question": "Does the creator in 'TEST 44' say her skin has fully cleared up, or does she mention any remaining problem areas?",
       "expected_answer_criteria": "She says the overall picture has improved, but explicitly mentions remaining problem areas (e.g. around the chin) — not a claim of complete clearing.",
-      "expected_video_ids": ["8Uf8HaUMmyk"]
+      "expected_video_ids": [
+        "8Uf8HaUMmyk"
+      ]
     },
     {
       "id": "rag_009",
       "question": "What items are included in the personalized package customers receive from Formel Skin?",
       "expected_answer_criteria": "Should mention a cleanser, a personalized formula/serum, and a booklet/brochure with usage instructions, sent by mail.",
-      "expected_video_ids": ["8Uf8HaUMmyk", "DH2z3BkknSQ"]
+      "expected_video_ids": [
+        "8Uf8HaUMmyk",
+        "DH2z3BkknSQ"
+      ]
     },
     {
       "id": "rag_010",
       "question": "What rating does the 'test 3' video give for not applying moisturizer after showering?",
       "expected_answer_criteria": "4 out of 10 (nach dem Duschen nicht eincremen — 4 von 10).",
-      "expected_video_ids": ["ACTsF3JxOhk"]
+      "expected_video_ids": [
+        "ACTsF3JxOhk"
+      ]
     }
   ]
 }

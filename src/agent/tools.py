@@ -23,8 +23,15 @@ from src.utils.config import (
     OPENAI_EMBEDDING_MODEL,
     PINECONE_INDEX_NAME,
     TOP_K_RESULTS,
+    MIN_RELEVANCE_SCORE,
 )
 from src.utils.logger import logger
+
+# Fixed marker query_corpus returns when nothing retrieved clears the relevance
+# floor. The agent's system prompt is instructed to recognize this literal
+# string and explicitly tell the user nothing was found — never paper over it
+# with a guessed answer.
+NO_RELEVANT_CONTENT_MARKER = "NO_RELEVANT_CONTENT_FOUND"
 
 
 # ── Tool 1: ingest_video ──────────────────────────────────────────────────────
@@ -83,20 +90,30 @@ def _build_vectorstore() -> PineconeVectorStore:
 def _query_corpus_fn(question: str) -> str:
     """
     Input: a natural language question about the ingested video corpus.
-    Returns the most relevant transcript excerpts with source metadata.
+    Returns the most relevant transcript excerpts with source metadata, or
+    the NO_RELEVANT_CONTENT_MARKER if nothing retrieved clears the minimum
+    relevance score — Pinecone always returns k matches when the index is
+    non-empty, even for a completely unrelated question, so an empty-results
+    check alone can't catch that case.
     """
     try:
         vectorstore = _build_vectorstore()
-        docs = vectorstore.similarity_search(question, k=TOP_K_RESULTS)
+        scored_docs = vectorstore.similarity_search_with_score(question, k=TOP_K_RESULTS)
+        relevant = [(doc, score) for doc, score in scored_docs if score >= MIN_RELEVANCE_SCORE]
 
-        if not docs:
-            return "No relevant content found in the knowledge base for that question."
+        if not relevant:
+            best_score = max((s for _, s in scored_docs), default=0.0)
+            logger.warning(
+                f"query_corpus: no results cleared MIN_RELEVANCE_SCORE={MIN_RELEVANCE_SCORE} "
+                f"(best score was {best_score:.3f}) for question: {question!r}"
+            )
+            return NO_RELEVANT_CONTENT_MARKER
 
         results = []
-        for i, doc in enumerate(docs, 1):
+        for i, (doc, score) in enumerate(relevant, 1):
             meta = doc.metadata
             source = f"{meta.get('title', 'Unknown')} ({meta.get('url', '')})"
-            results.append(f"[{i}] Source: {source}\n{doc.page_content}")
+            results.append(f"[{i}] Source: {source} (relevance: {score:.2f})\n{doc.page_content}")
 
         return "\n\n---\n\n".join(results)
 
@@ -112,7 +129,9 @@ query_corpus_tool = Tool(
         "Use this tool to search the knowledge base of ingested YouTube videos. "
         "Input: a natural language question such as 'What hook did this creator use?' "
         "or 'Which videos mention purging?' or 'What claims are made about acne treatment?'. "
-        "Returns the most relevant transcript excerpts."
+        "Returns the most relevant transcript excerpts, each labeled with a relevance score. "
+        f"If nothing relevant was found, returns exactly the string '{NO_RELEVANT_CONTENT_MARKER}' "
+        "— when you see this, tell the user nothing relevant was found. Never guess an answer instead."
     ),
 )
 

@@ -15,7 +15,7 @@ def test_config_loads_without_error():
         assert config.OPENAI_LLM_MODEL == "gpt-4o-mini"
         assert config.CHUNK_SIZE == 500
         assert config.CHUNK_OVERLAP == 50
-        assert config.TOP_K_RESULTS == 5
+        assert config.TOP_K_RESULTS == 8
     except EnvironmentError as e:
         pytest.skip(f"Skipping — .env not configured: {e}")
 

@@ -26,18 +26,36 @@ from src.utils.config import (
     OPENAI_LLM_MODEL,
     PINECONE_INDEX_NAME,
     TOP_K_RESULTS,
+    MIN_RELEVANCE_SCORE,
 )
 
+# Fixed, structured marker for "nothing supports an answer" — matches the one
+# used by the production query_corpus tool (src/agent/tools.py). Detectable
+# programmatically, unlike freeform "I don't know" prose.
+NOT_FOUND_MARKER = "NOT_FOUND_IN_KNOWLEDGE_BASE"
+
 _RAG_ANSWER_PROMPT = """You are a Creative Intelligence Copilot. Answer the question based ONLY on the
-following transcript excerpts. If the answer is not in the context, say so.
+following transcript excerpts.
+
+The context below is a set of separate blocks pulled from different videos —
+most retrieved blocks will be irrelevant to this specific question, and that is
+normal, not a sign the answer is missing. Check EVERY block individually before
+deciding. If even ONE block directly answers the question, use it — do not let
+the surrounding irrelevant blocks talk you out of an answer that IS present.
+
+Only respond with EXACTLY this and nothing else if, after checking every single
+block, none of them answer the question: {not_found_marker}
+Do not guess or speculate when no block supports an answer — but do not decline
+just because most of the context is unrelated noise, either.
+
 Always cite which video/source the information comes from.
 
 Context:
-{context}
+{{context}}
 
-Question: {question}
+Question: {{question}}
 
-Answer:"""
+Answer:""".format(not_found_marker=NOT_FOUND_MARKER)
 
 _FAITHFULNESS_JUDGE_PROMPT = """You are checking whether an AI-generated answer is faithful to the source
 context it was given — i.e. every factual claim in the answer is actually
@@ -74,15 +92,35 @@ def retrieve_and_answer(question: str, k: int = TOP_K_RESULTS) -> dict:
     """
     Retrieve relevant chunks and generate an answer, capturing the exact
     context the answer was based on (needed for grounded faithfulness judging).
+
+    Two layers against hallucination, matching the production query_corpus tool:
+    1. Score gate — if nothing retrieved clears MIN_RELEVANCE_SCORE, skip
+       generation entirely and return NOT_FOUND_MARKER without calling the LLM.
+    2. Prompt instruction — even when context is retrieved, the LLM is told to
+       return the same structured marker rather than guess if the context
+       doesn't actually answer the question.
     """
     from langchain_openai import ChatOpenAI, OpenAIEmbeddings
     from langchain_pinecone import PineconeVectorStore
 
     embeddings = OpenAIEmbeddings(model=OPENAI_EMBEDDING_MODEL, openai_api_key=OPENAI_API_KEY)
     vectorstore = PineconeVectorStore(index_name=PINECONE_INDEX_NAME, embedding=embeddings)
-    retriever = vectorstore.as_retriever(search_kwargs={"k": k})
 
-    docs = retriever.invoke(question)
+    scored_docs = vectorstore.similarity_search_with_score(question, k=k)
+    relevant = [(doc, score) for doc, score in scored_docs if score >= MIN_RELEVANCE_SCORE]
+
+    if not relevant:
+        best_score = max((s for _, s in scored_docs), default=0.0)
+        return {
+            "question": question,
+            "context": "",
+            "answer": NOT_FOUND_MARKER,
+            "retrieved_video_ids": [],
+            "n_chunks_retrieved": 0,
+            "best_score_below_floor": round(best_score, 4),
+        }
+
+    docs = [doc for doc, _ in relevant]
     context = "\n\n---\n\n".join(
         f"[Source: {d.metadata.get('title', 'Unknown')}]\n{d.page_content}" for d in docs
     )
@@ -116,7 +154,22 @@ def _judge_json(prompt: str) -> dict:
 
 
 def judge_faithfulness(answer: str, context: str) -> dict:
-    """Score whether every claim in the answer is actually supported by the retrieved context."""
+    """
+    Score whether every claim in the answer is actually supported by the retrieved context.
+
+    An explicit NOT_FOUND_MARKER answer is trivially faithful by construction —
+    it makes zero claims, so there is nothing to be unfaithful about. Short-circuit
+    this deterministically rather than asking the LLM judge: an early version of
+    this eval let the judge score NOT_FOUND answers itself, and it consistently
+    misjudged them as "unsupported claims", which would silently punish the
+    exact honest-refusal behavior this whole hardening effort was built to reward.
+    """
+    if answer.strip() == NOT_FOUND_MARKER:
+        return {
+            "faithfulness_score": 5,
+            "unsupported_claims": [],
+            "reasoning": "Explicit decline rather than a guess — trivially faithful, no claims made.",
+        }
     return _judge_json(_FAITHFULNESS_JUDGE_PROMPT.format(context=context, answer=answer))
 
 

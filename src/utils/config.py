@@ -49,4 +49,12 @@ LANGCHAIN_PROJECT: str = os.getenv("LANGCHAIN_PROJECT", "copilot-mvp")
 # ── Chunking ──────────────────────────────────────────────────────────────────
 CHUNK_SIZE: int = int(os.getenv("CHUNK_SIZE", "500"))
 CHUNK_OVERLAP: int = int(os.getenv("CHUNK_OVERLAP", "50"))
-TOP_K_RESULTS: int = int(os.getenv("TOP_K_RESULTS", "5"))
+# Raised from 5 to 8 after an eval showed short/low-chunk-count videos getting
+# crowded out of top-5 once the corpus grew — see data/eval/RAG_SUMMARY.md.
+TOP_K_RESULTS: int = int(os.getenv("TOP_K_RESULTS", "8"))
+# Coarse safety floor: retrieved chunks scoring below this are treated as "not
+# relevant" rather than fed to the LLM as if they were good context. This does
+# NOT reliably distinguish "right video" from "wrong but topically similar
+# video" (both can score similarly) — it only catches queries with no
+# meaningfully relevant content in the corpus at all. See query_corpus_fn.
+MIN_RELEVANCE_SCORE: float = float(os.getenv("MIN_RELEVANCE_SCORE", "0.15"))
