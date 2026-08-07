@@ -8,7 +8,8 @@ Run with: streamlit run app/app.py
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+REPO_ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(REPO_ROOT))
 
 import streamlit as st
 
@@ -21,6 +22,65 @@ st.set_page_config(
     page_icon="🎯",
     layout="wide",
 )
+
+
+@st.cache_resource(show_spinner=False)
+def _ensure_legal_corpus() -> dict:
+    """
+    Startup check: if the eu-regulations Pinecone namespace is empty, auto-ingest
+    the bundled legal source docs (data/legal/*.txt) so grounded compliance checks
+    work out of the box — no manual notebook run required after a fresh deploy.
+
+    @st.cache_resource means this runs once per server process, not once per
+    user session, so it won't re-check Pinecone on every page load.
+    """
+    from pinecone import Pinecone
+    from src.utils.config import PINECONE_API_KEY, PINECONE_INDEX_NAME
+    from src.ingestion.legal_docs import ingest_legal_document, LEGAL_NAMESPACE
+
+    pc = Pinecone(api_key=PINECONE_API_KEY)
+    index = pc.Index(PINECONE_INDEX_NAME)
+    stats = index.describe_index_stats()
+    existing = stats.get("namespaces", {}).get(LEGAL_NAMESPACE, {}).get("vector_count", 0)
+
+    if existing > 0:
+        logger.info(f"Legal corpus already present ({existing} vectors in '{LEGAL_NAMESPACE}')")
+        return {"status": "already_present", "vector_count": existing}
+
+    logger.info(f"Legal corpus empty — auto-ingesting bundled documents into '{LEGAL_NAMESPACE}'")
+    legal_dir = REPO_ROOT / "data" / "legal"
+    documents = [
+        {
+            "file_path": str(legal_dir / "hwg.txt"),
+            "law_name": "HWG",
+            "source_url": "https://www.gesetze-im-internet.de/heilmwerbg/",
+        },
+        {
+            "file_path": str(legal_dir / "uwg_5a.txt"),
+            "law_name": "UWG",
+            "source_url": "https://www.gesetze-im-internet.de/uwg_2004/__5a.html",
+        },
+        {
+            "file_path": str(legal_dir / "uwg_3a.txt"),
+            "law_name": "UWG",
+            "source_url": "https://www.gesetze-im-internet.de/uwg_2004/__3a.html",
+        },
+    ]
+
+    total = 0
+    try:
+        for doc in documents:
+            summary = ingest_legal_document(**doc)
+            total += summary["vectors_upserted"]
+        logger.info(f"Auto-ingested legal corpus: {total} vectors")
+        return {"status": "ingested", "vector_count": total}
+    except Exception as e:
+        logger.error(f"Legal corpus auto-ingestion failed: {e}")
+        return {"status": "failed", "error": str(e)}
+
+
+with st.spinner("Preparing legal knowledge base..."):
+    _legal_corpus_status = _ensure_legal_corpus()
 
 # ── Session state init ────────────────────────────────────────────────────────
 if "agent" not in st.session_state:
@@ -161,6 +221,18 @@ with st.sidebar:
                 f"- **{v['title']}** by *{channel}*  \n"
                 f"  {v['chunk_count']} chunks{url_line}"
             )
+
+    st.markdown("---")
+    with st.expander("Legal corpus status"):
+        status = _legal_corpus_status.get("status")
+        count = _legal_corpus_status.get("vector_count", 0)
+        if status == "already_present":
+            st.caption(f"✅ {count} legal provisions loaded (HWG, UWG §5a, §3a)")
+        elif status == "ingested":
+            st.caption(f"✅ Auto-ingested {count} legal provisions on startup")
+        else:
+            st.caption(f"⚠️ Legal corpus unavailable — {_legal_corpus_status.get('error', 'unknown error')}")
+            st.caption("Compliance checks will fall back to ungrounded LLM judgment.")
 
 # ── Main chat area ───────────────────────────────────────────────────────────
 st.markdown("## Creative Intelligence Copilot")
