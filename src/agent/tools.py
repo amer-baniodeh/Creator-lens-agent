@@ -155,10 +155,13 @@ check_compliance_tool = Tool(
     name="check_compliance",
     func=_check_compliance_fn,
     description=(
-        "Use this tool to check whether any text is compliant with EU healthcare "
+        "Use this tool to check whether any text is compliant with German/EU healthcare "
         "advertising law. Input: a script, transcript excerpt, brief draft, or any "
         "text that makes claims about a skincare or medical product. "
-        "Returns a compliance verdict with flagged phrases if non-compliant."
+        "Returns a graded verdict (0=fully compliant, 1=compliant with a minor note, "
+        "2=grey area needing legal review, 3=not compliant), with cited legal sections "
+        "and flagged phrases. Relay the verdict level accurately — a grey-area (2) "
+        "result is NOT the same as a clear pass or a clear violation; say so explicitly."
     ),
 )
 

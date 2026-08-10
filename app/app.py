@@ -60,17 +60,22 @@ st.markdown(
     .app-title { font-size: 22px; font-weight: 700; color: #F0EEFA; letter-spacing: -0.3px; }
     .app-subtitle { font-size: 13px; color: #9C9AB0; margin-top: 2px; }
 
-    /* Compliance card */
+    /* Compliance card — 4-level verdict scale (0-3) */
     .compliance-card { border-radius: 14px; padding: 16px 18px; margin: 8px 0; border: 1px solid; background: #17171F; }
-    .compliance-card.badge-compliant { border-color: rgba(74,222,128,0.3); background: rgba(74,222,128,0.06); }
-    .compliance-card.badge-violation { border-color: rgba(248,113,113,0.3); background: rgba(248,113,113,0.06); }
+    .compliance-card.badge-v0 { border-color: rgba(74,222,128,0.3); background: rgba(74,222,128,0.06); }
+    .compliance-card.badge-v1 { border-color: rgba(94,214,168,0.3); background: rgba(94,214,168,0.06); }
+    .compliance-card.badge-v2 { border-color: rgba(245,166,66,0.35); background: rgba(245,166,66,0.08); }
+    .compliance-card.badge-v3 { border-color: rgba(248,113,113,0.3); background: rgba(248,113,113,0.06); }
     .compliance-card-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
     .compliance-icon { font-size: 16px; }
     .compliance-badge { font-size: 11px; font-weight: 700; letter-spacing: 0.06em; padding: 3px 10px; border-radius: 20px; text-transform: uppercase; }
-    .compliance-badge.badge-compliant { background: rgba(74,222,128,0.15); color: #4ADE80; }
-    .compliance-badge.badge-violation { background: rgba(248,113,113,0.15); color: #F87171; }
+    .compliance-badge.badge-v0 { background: rgba(74,222,128,0.15); color: #4ADE80; }
+    .compliance-badge.badge-v1 { background: rgba(94,214,168,0.15); color: #5ED6A8; }
+    .compliance-badge.badge-v2 { background: rgba(245,166,66,0.18); color: #F5A642; }
+    .compliance-badge.badge-v3 { background: rgba(248,113,113,0.15); color: #F87171; }
     .compliance-source { font-size: 11px; color: #7A7890; margin-left: auto; font-family: 'SF Mono', Menlo, monospace; }
-    .compliance-reason { font-size: 13.5px; color: #D4D2E0; line-height: 1.55; margin-bottom: 10px; }
+    .compliance-reason { font-size: 13.5px; color: #D4D2E0; line-height: 1.55; margin-bottom: 6px; }
+    .compliance-notes { font-size: 12.5px; color: #A8A6BC; line-height: 1.5; margin-bottom: 10px; font-style: italic; }
     .chip-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
     .chip { font-size: 11px; padding: 3px 10px; border-radius: 20px; font-family: 'SF Mono', Menlo, monospace; }
     .chip-section { background: rgba(139,124,246,0.15); color: #B4A8FA; }
@@ -85,8 +90,10 @@ st.markdown(
     .kb-channel { font-size: 11px; color: #8A88A0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .kb-meta { font-size: 10.5px; color: #6C6A80; display: flex; align-items: center; gap: 5px; margin-top: 2px; }
     .kb-dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
-    .kb-dot.dot-compliant { background: #4ADE80; }
-    .kb-dot.dot-violation { background: #F87171; }
+    .kb-dot.dot-v0 { background: #4ADE80; }
+    .kb-dot.dot-v1 { background: #5ED6A8; }
+    .kb-dot.dot-v2 { background: #F5A642; }
+    .kb-dot.dot-v3 { background: #F87171; }
     .kb-dot.dot-unknown { background: #5A5870; }
 
     /* Legal corpus badges */
@@ -232,7 +239,7 @@ def _run_video_analysis(summary: dict, status_ph) -> dict:
 
 def _handle_ingestion(summary: dict):
     """Store ingestion result and run structured analysis."""
-    summary["compliance_status"] = None
+    summary["compliance_verdict"] = None
     st.session_state.ingested_videos.append(summary)
     st.success(
         f"Ingested **{summary['title']}** "
@@ -245,7 +252,7 @@ def _handle_ingestion(summary: dict):
         result = _run_video_analysis(summary, status_ph)
         status_ph.empty()
 
-        summary["compliance_status"] = "compliant" if result["compliance"]["compliant"] else "violation"
+        summary["compliance_verdict"] = result["compliance"]["verdict"]
 
         st.session_state.messages.append({
             "role": "assistant",
@@ -269,11 +276,14 @@ def _handle_ingestion(summary: dict):
 
 # ── Rendering helpers ────────────────────────────────────────────────────────
 
+_VERDICT_ICONS = {0: "✅", 1: "✅", 2: "⚠️", 3: "🚨"}
+
+
 def _compliance_card_html(result: dict) -> str:
-    compliant = result.get("compliant", True)
-    badge_class = "badge-compliant" if compliant else "badge-violation"
-    badge_text = "COMPLIANT" if compliant else "VIOLATION"
-    icon = "✅" if compliant else "🚨"
+    verdict = result.get("verdict", 0 if result.get("compliant", True) else 3)
+    badge_class = f"badge-v{verdict}"
+    badge_text = result.get("verdict_label", "Unknown").upper()
+    icon = _VERDICT_ICONS.get(verdict, "❓")
 
     sections_html = "".join(
         f'<span class="chip chip-section">{html.escape(s)}</span>'
@@ -283,6 +293,7 @@ def _compliance_card_html(result: dict) -> str:
         f'<span class="chip chip-phrase">&quot;{html.escape(p)}&quot;</span>'
         for p in result.get("flagged_phrases", [])
     )
+    notes = result.get("notes", "")
 
     return f"""
     <div class="compliance-card {badge_class}">
@@ -292,6 +303,7 @@ def _compliance_card_html(result: dict) -> str:
         <span class="compliance-source">via {html.escape(result.get('source', 'unknown'))}</span>
       </div>
       <div class="compliance-reason">{html.escape(result.get('reason', ''))}</div>
+      {f'<div class="compliance-notes">{html.escape(notes)}</div>' if notes else ''}
       {f'<div class="chip-row">{sections_html}</div>' if sections_html else ''}
       {f'<div class="chip-row">{phrases_html}</div>' if phrases_html else ''}
     </div>
@@ -325,10 +337,8 @@ def _kb_card_html(v: dict) -> str:
         f'<img class="kb-thumb" src="{thumb}" />'
         if thumb else '<div class="kb-thumb-placeholder">📝</div>'
     )
-    dot_class = {
-        "compliant": "dot-compliant",
-        "violation": "dot-violation",
-    }.get(v.get("compliance_status"), "dot-unknown")
+    verdict = v.get("compliance_verdict")
+    dot_class = f"dot-v{verdict}" if verdict is not None else "dot-unknown"
 
     title = html.escape(v.get("title", ""))
     channel = html.escape(v.get("channel", "Unknown"))
@@ -362,12 +372,15 @@ def _handle_user_turn(user_input: str):
         status_ph.empty()
 
         msg_data = {"role": "assistant", "type": "text", "content": answer}
-        if "🚨" in answer or "Non-compliant" in answer:
+        if "🚨" in answer or "Not compliant" in answer:
             st.error(answer)
-            msg_data["is_compliance_flag"] = True
+            msg_data["compliance_display"] = "error"
+        elif "⚠️" in answer or "needs legal review" in answer or "Grey area" in answer:
+            st.warning(answer)
+            msg_data["compliance_display"] = "warning"
         elif "✅" in answer or "Compliant" in answer:
             st.success(answer)
-            msg_data["is_compliance_pass"] = True
+            msg_data["compliance_display"] = "success"
         else:
             st.markdown(answer)
 
@@ -468,14 +481,14 @@ st.markdown(
 )
 
 # Chat history display
+_COMPLIANCE_DISPLAY_FN = {"error": st.error, "warning": st.warning, "success": st.success}
+
 for msg in st.session_state.messages:
     with st.chat_message(msg["role"], avatar=_AVATARS.get(msg["role"])):
         if msg.get("type") == "video_analysis":
             _render_video_analysis_message(msg)
-        elif msg.get("is_compliance_flag"):
-            st.error(msg["content"])
-        elif msg.get("is_compliance_pass"):
-            st.success(msg["content"])
+        elif msg.get("compliance_display") in _COMPLIANCE_DISPLAY_FN:
+            _COMPLIANCE_DISPLAY_FN[msg["compliance_display"]](msg["content"])
         else:
             st.markdown(msg["content"])
 

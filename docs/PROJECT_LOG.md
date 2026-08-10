@@ -198,10 +198,42 @@ and one specific gap remains open: a correct non-English chunk can still get mis
 when it's surrounded by content in a different language. Documented rather than
 papered over.
 
+## 12. From binary to graded compliance verdicts, and a real model comparison
+
+The compliance checker only ever said compliant or not — no room for "technically fine
+but worth a note" or "genuinely unclear, a person should look at this." Redesigned it
+around a 4-level scale (fully compliant / minor note / grey area needing legal review /
+not compliant), and switched from loose "JSON mode" to OpenAI's actual Structured
+Outputs — a strict schema with an enforced verdict enum, so the model literally cannot
+return something outside the defined levels. Added fresh calibration examples for each
+level, kept separate from the eval sets so the eval still means something. The UI now
+shows all 4 states distinctly, with the "needs review" case visually different enough
+to actually prompt someone to look at it.
+
+Relabeling the eval sets for the new scale surfaced a real gap: the original hand-
+labeled examples were all either clear violations or clearly clean — none were
+genuinely ambiguous under the law. Added dedicated grey-area examples to both sets so
+that verdict level actually gets tested, not just assumed to work.
+
+**Model comparison, done properly rather than assumed:** evaluated the current model
+against a newer alternative on the identical, freshly-relabeled eval sets. The
+alternative was clearly worse on this task — both less accurate and slower — though
+notably not because it made worse mistakes; it was simply far more conservative,
+pushing many clear-cut cases into "needs review" instead of resolving them. Kept the
+current model. Important caveat stated plainly rather than glossed over: the
+classifier's prompt was tuned specifically against the current model's behavior over
+several earlier iterations, so this comparison isn't necessarily fair to a model
+that's never been calibrated — it's what today's data supports, not a permanent verdict.
+
 ## Current state (updated as of the most recent entry above)
 
-- **Compliance checker:** grounded in real law, evaluated, ~94-97% accurate on hand-
-  labeled claims across two independent test sets.
+- **Compliance checker:** grounded in real law, graded 4-level verdict (not binary) via
+  Structured Outputs, ~90-91% exact-match accuracy across two independent test sets
+  (ordinal metrics — exact match / off-by-one tolerance / severe-miss rate, since binary
+  precision/recall doesn't fit a graded scale).
+- **Model choice:** evaluated head-to-head against an alternative; current model won on
+  both accuracy and latency. Model is swappable per-call for future comparisons without
+  a config change.
 - **Cost/latency:** near-negligible cost at current scale (sub-cent for all testing so
   far); full chat turn averages ~8-9 seconds.
 - **RAG quality:** generation is confirmed faithful, with structural safeguards against

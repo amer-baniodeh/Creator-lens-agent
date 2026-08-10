@@ -14,7 +14,7 @@ than informal testing. See [PROJECT_LOG.md](PROJECT_LOG.md) for how it got here.
 
 | Layer | Technology |
 |---|---|
-| LLM | OpenAI `gpt-4o-mini` |
+| LLM | OpenAI `gpt-4o-mini` — chosen empirically, not by default. Evaluated head-to-head against `gpt-5.6-terra` on the compliance eval sets; gpt-4o-mini scored notably higher (90.9% vs 66.7% exact-match verdict accuracy) and ran ~1.7-2x faster. See `data/eval/SUMMARY.md`. |
 | Embeddings | OpenAI `text-embedding-3-small` (1536 dim) |
 | Vector DB | Pinecone (free tier, cosine metric), two namespaces — see below |
 | Orchestration | LangChain `AgentExecutor` + `ConversationBufferMemory` |
@@ -113,11 +113,18 @@ ingest_video   query_corpus   check_compliance
 - Output: relevant transcript excerpts with source + relevance score, or the marker
 
 ### `check_compliance`
-Two-layer, grounded in real law rather than an LLM's general legal knowledge:
-- **Layer 1 (fast):** regex match against a ~30-phrase forbidden-phrase blocklist
-- **Layer 2 (RAG-grounded):** retrieves the actual relevant provisions from the `eu-regulations` Pinecone namespace (HWG, UWG §5a/§3a) and asks GPT to judge compliance using *only* that retrieved text, citing the specific sub-provision (e.g. `§11 Abs. 1 Nr. 9 HWG`), not just a bare section number
+Two-layer, grounded in real law rather than an LLM's general legal knowledge, returning a
+**4-level graded verdict** (not binary) via OpenAI **Structured Outputs** — a strict JSON
+schema with an enforced enum, not just "JSON mode." The model cannot return a verdict
+outside 0-3 or omit a field; this replaced an earlier looser JSON-mode implementation.
+
+- **Verdict scale:** 0 = fully compliant · 1 = compliant, minor stylistic note · 2 = grey
+  area — needs legal review · 3 = not compliant
+- **Layer 1 (fast):** regex match against a ~30-phrase forbidden-phrase blocklist — always verdict 3
+- **Layer 2 (RAG-grounded):** retrieves the actual relevant provisions from the `eu-regulations` Pinecone namespace (HWG, UWG §5a/§3a) and asks GPT to grade compliance using *only* that retrieved text, citing the specific sub-provision (e.g. `§11 Abs. 1 Nr. 9 HWG`). Prompt includes fresh few-shot exemplars, one per verdict level, kept separate from the eval sets.
 - Falls back to an ungrounded classifier only if the legal namespace is empty (self-heals via auto-ingestion on app startup)
-- Output: compliant/non-compliant verdict, cited section(s), flagged phrases, source layer
+- Output: `verdict` (0-3), `verdict_label`, `compliant`/`needs_review` (derived booleans), `reason`, `notes`, cited section(s), flagged phrases, source layer
+- Model is overridable per-call (`model=` param) — used to run the same eval against alternative models without changing global config
 
 ## Evaluation framework
 
@@ -133,9 +140,16 @@ every run and a `runs/` archive so nothing is overwritten.
 | Cost & latency (from LangSmith traces) | `07_cost_latency_report.ipynb` | `data/metrics/SUMMARY.md` |
 
 Headline results as of the last run (see the summary files for current numbers):
-compliance accuracy ~94-97% across two independent labeled sets; RAG generation
-is fully faithful with structural hallucination guards (relevance-score gating +
-explicit refusal, not just prompt hedging); GPT cost is sub-cent at current scale.
+compliance verdict exact-match accuracy ~90-91% across two independent labeled sets
+on the 4-level scale (metrics are ordinal — exact match, off-by-one tolerance, and
+severe-miss rate, since binary precision/recall doesn't fit a graded verdict); RAG
+generation is fully faithful with structural hallucination guards (relevance-score
+gating + explicit refusal, not just prompt hedging); GPT cost is sub-cent at current
+scale; `gpt-4o-mini` was chosen over `gpt-5.6-terra` after a head-to-head eval showed
+higher accuracy and lower latency (see Stack table above) — the classifier prompt was
+tuned specifically against gpt-4o-mini's behavior across earlier iterations, so this
+result isn't necessarily fair to an untuned alternative model, but it's what the data
+supports today.
 
 **Known open limitations** (tracked, not hidden): one compliance recall miss on a
 professional-endorsement claim type; a cross-lingual RAG retrieval gap where a
