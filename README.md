@@ -31,8 +31,9 @@ streamlit run app/app.py
 ```
 
 Paste a YouTube link and it pulls the transcript, checks it for compliance, and
-gives you a summary. You can also just chat with it and ask questions about videos
-already in the knowledge base.
+gives you a summary. You can also just chat with it — ask about a specific quote or
+claim, or ask a broad question like "which claims need revision across all videos,"
+which runs a full-transcript compliance review rather than a quick search.
 
 YouTube blocks cloud servers from fetching videos, so live ingestion only works
 locally (or through an ngrok tunnel). On the cloud-hosted version, use the
@@ -46,18 +47,24 @@ the top.
 
 ## How well it works
 
-- **Compliance checker:** ~90% exact-match accuracy on a 4-level verdict scale
-  (fully compliant / minor note / grey area / not compliant), holding up on both
-  the labeled set and an untouched holdout set.
+- **Compliance checker:** high-80s to ~90% exact-match accuracy on a 4-level verdict
+  scale (fully compliant / minor note / grey area / not compliant), holding up on
+  both the labeled set and an untouched holdout set.
 - **RAG answers:** fully faithful to retrieved sources — it doesn't make things up,
   and says so explicitly when it can't find an answer. Correctness is lower and
   traced to retrieval (not generation) as the corpus grows — a known limitation,
   not a fixed one.
+- **Security:** red-teamed against prompt leakage, jailbreaking, and prompt
+  injection — including a real exploit found and fixed during testing, where text
+  embedded in a video's title or transcript could manipulate a compliance verdict
+  or the chat agent's answer. Untrusted content is now delimited, scanned, and
+  backed by a deterministic warning to the user whenever something looks off,
+  rather than trusting the model to catch it on its own.
 - **Cost:** under a cent across all testing so far. A full agent turn (question →
   tool use → answer) costs about $0.0005 and takes 8-9 seconds.
 
 Full numbers and methodology in `data/eval/SUMMARY.md`, `data/eval/RAG_SUMMARY.md`,
-and `data/metrics/SUMMARY.md`.
+`data/eval/SECURITY_SUMMARY.md`, and `data/metrics/SUMMARY.md`.
 
 ## More detail
 
