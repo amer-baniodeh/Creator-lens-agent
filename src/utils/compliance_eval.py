@@ -13,6 +13,7 @@ alone can't distinguish those. This module scores both.
 from __future__ import annotations
 
 import time
+from collections import Counter
 
 from src.compliance.checker import check_compliance
 
@@ -53,33 +54,63 @@ def compute_ordinal_metrics(
     }
 
 
-def run_compliance_eval(examples: list[dict], model: str | None = None) -> list[dict]:
+def run_compliance_eval(
+    examples: list[dict],
+    model: str | None = None,
+    top_p: float | None = None,
+    n_runs: int = 1,
+) -> list[dict]:
     """
     Run check_compliance() over a labeled example set, optionally overriding
     the model (for comparing gpt-4o-mini vs. another model on the same set).
 
     Each example must have: id, claim, category, ground_truth_verdict.
+
+    top_p: eval-only sampling override, passed straight through to
+        check_compliance(). None (default) leaves normal temperature=0 behavior.
+    n_runs: if > 1, calls check_compliance() this many times per example and
+        takes the majority verdict (ties broken by the median of the tied
+        verdicts, since the scale is ordinal). Used to separate genuine model
+        capability from single-sample noise for non-deterministic models —
+        keep at 1 for a normal single-shot run.
     """
-    kwargs = {"model": model} if model else {}
+    kwargs = {}
+    if model:
+        kwargs["model"] = model
+    if top_p is not None:
+        kwargs["top_p"] = top_p
+
     results = []
 
     for ex in examples:
         start = time.time()
-        result = check_compliance(ex["claim"], **kwargs)
-        latency_ms = round((time.time() - start) * 1000)
+        runs = [check_compliance(ex["claim"], **kwargs) for _ in range(n_runs)]
+        latency_ms = round((time.time() - start) * 1000 / n_runs)
+
+        verdicts = [r["verdict"] for r in runs]
+        if n_runs == 1:
+            predicted_verdict = verdicts[0]
+            chosen = runs[0]
+        else:
+            counts = Counter(verdicts)
+            top_count = max(counts.values())
+            tied = sorted(v for v, c in counts.items() if c == top_count)
+            predicted_verdict = tied[len(tied) // 2]  # median of tied verdicts
+            chosen = next(r for r in runs if r["verdict"] == predicted_verdict)
 
         results.append({
             "id": ex["id"],
             "claim": ex["claim"],
             "category": ex["category"],
             "ground_truth_verdict": ex["ground_truth_verdict"],
-            "predicted_verdict": result["verdict"],
-            "correct": result["verdict"] == ex["ground_truth_verdict"],
-            "source": result["source"],
-            "cited_sections": result.get("cited_sections", []),
-            "reason": result.get("reason", ""),
-            "notes": result.get("notes", ""),
+            "predicted_verdict": predicted_verdict,
+            "correct": predicted_verdict == ex["ground_truth_verdict"],
+            "source": chosen["source"],
+            "cited_sections": chosen.get("cited_sections", []),
+            "reason": chosen.get("reason", ""),
+            "notes": chosen.get("notes", ""),
             "latency_ms": latency_ms,
+            **({"all_verdicts": verdicts} if n_runs > 1 else {}),
         })
 
     return results

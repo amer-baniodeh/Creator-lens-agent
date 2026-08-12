@@ -1,0 +1,334 @@
+{
+  "run_at": "2026-08-12T07:54:51.050730+00:00",
+  "model": "gpt-5.6-terra",
+  "set_type": "holdout",
+  "note": "Test A: terra with top_p=0.3 instead of default sampling (temperature=0 is rejected by this model).",
+  "metrics": {
+    "n": 20,
+    "exact_match_accuracy": 0.7,
+    "off_by_one_accuracy": 0.9,
+    "severe_miss_rate": 0.1,
+    "mean_absolute_error": 0.4
+  },
+  "by_category": {
+    "blocklist": {
+      "n": 2,
+      "exact_match_accuracy": 1.0,
+      "off_by_one_accuracy": 1.0,
+      "severe_miss_rate": 0.0,
+      "mean_absolute_error": 0.0
+    },
+    "compliant": {
+      "n": 7,
+      "exact_match_accuracy": 0.857,
+      "off_by_one_accuracy": 0.857,
+      "severe_miss_rate": 0.143,
+      "mean_absolute_error": 0.286
+    },
+    "grey_area": {
+      "n": 2,
+      "exact_match_accuracy": 0.5,
+      "off_by_one_accuracy": 0.5,
+      "severe_miss_rate": 0.5,
+      "mean_absolute_error": 1.0
+    },
+    "minor_note": {
+      "n": 1,
+      "exact_match_accuracy": 1.0,
+      "off_by_one_accuracy": 1.0,
+      "severe_miss_rate": 0.0,
+      "mean_absolute_error": 0.0
+    },
+    "rag_subtle": {
+      "n": 8,
+      "exact_match_accuracy": 0.5,
+      "off_by_one_accuracy": 1.0,
+      "severe_miss_rate": 0.0,
+      "mean_absolute_error": 0.5
+    }
+  },
+  "predictions": [
+    {
+      "id": "holdout_001",
+      "claim": "Our night cream is clinically tested to erase fine lines.",
+      "category": "blocklist",
+      "ground_truth_verdict": 3,
+      "predicted_verdict": 3,
+      "correct": true,
+      "source": "blocklist",
+      "cited_sections": [],
+      "reason": "Text contains 1 forbidden phrase(s) under German/EU health advertising law.",
+      "notes": "",
+      "latency_ms": 0
+    },
+    {
+      "id": "holdout_002",
+      "claim": "100% effective solution, no side effects at all.",
+      "category": "blocklist",
+      "ground_truth_verdict": 3,
+      "predicted_verdict": 3,
+      "correct": true,
+      "source": "blocklist",
+      "cited_sections": [],
+      "reason": "Text contains 2 forbidden phrase(s) under German/EU health advertising law.",
+      "notes": "",
+      "latency_ms": 0
+    },
+    {
+      "id": "holdout_003",
+      "claim": "My aesthetician says everyone in her clinic uses this daily.",
+      "category": "rag_subtle",
+      "ground_truth_verdict": 3,
+      "predicted_verdict": 2,
+      "correct": false,
+      "source": "llm_rag",
+      "cited_sections": [
+        "§11 Abs. 1 Nr. 2 HWG"
+      ],
+      "reason": "The statement invokes an aesthetician and her clinic as support for daily use, which may be understood as a recommendation by persons working in healthcare. On the provided text, however, neither the product's HWG coverage nor the aesthetician's relevant professional status is clear.",
+      "notes": "Clarify the product category and whether the aesthetician/clinic personnel are persons working in healthcare within the meaning of the provision. If so, remove the clinic-use statement or avoid presenting it as an authority-based endorsement.",
+      "latency_ms": 4830
+    },
+    {
+      "id": "holdout_004",
+      "claim": "Get a free full-size product with your first prescription order — limited time!",
+      "category": "rag_subtle",
+      "ground_truth_verdict": 3,
+      "predicted_verdict": 2,
+      "correct": false,
+      "source": "llm_rag",
+      "cited_sections": [],
+      "reason": "The legal classification and advertising context of the product are not clear from the text alone; the provided provisions do not expressly regulate a free-product incentive in this situation.",
+      "notes": "The content indicates a prescription order, but it does not identify the product or establish that the advertised item is a prescription-only medicinal product. The supplied excerpts therefore do not clearly support an automatic finding under §10 or the mandatory-information rules in §4.",
+      "latency_ms": 3584
+    },
+    {
+      "id": "holdout_005",
+      "claim": "Without this in your routine, breakouts are basically guaranteed.",
+      "category": "rag_subtle",
+      "ground_truth_verdict": 3,
+      "predicted_verdict": 3,
+      "correct": true,
+      "source": "llm_rag",
+      "cited_sections": [
+        "§11 Abs. 1 Nr. 7 HWG"
+      ],
+      "reason": "The statement presents non-use as leading to a negative skin outcome ('breakouts are basically guaranteed'), which is a generalized promotional claim that health could be impaired by not using the product.",
+      "notes": "",
+      "latency_ms": 3022
+    },
+    {
+      "id": "holdout_006",
+      "claim": "Check out these dramatic before-and-after shots from just 3 days of use.",
+      "category": "rag_subtle",
+      "ground_truth_verdict": 3,
+      "predicted_verdict": 3,
+      "correct": true,
+      "source": "llm_rag",
+      "cited_sections": [
+        "§11 Abs. 1 Nr. 5 HWG"
+      ],
+      "reason": "The content promotes a product through dramatic before-and-after imagery purporting to show its effect after three days. Such imagery is prohibited where it depicts the effect of an Arzneimittel in a misleading manner.",
+      "notes": "",
+      "latency_ms": 3720
+    },
+    {
+      "id": "holdout_007",
+      "claim": "Read what happened when I finally cured my psoriasis with this one product.",
+      "category": "rag_subtle",
+      "ground_truth_verdict": 3,
+      "predicted_verdict": 2,
+      "correct": false,
+      "source": "llm_rag",
+      "cited_sections": [
+        "§11 Abs. 1 Nr. 3 HWG",
+        "§11 Abs. 1 Nr. 7 HWG"
+      ],
+      "reason": "The text uses a disease-history-style account to claim that a single product cured psoriasis. Although phrased in the first person, the explicit cure/product framing goes beyond a mere subjective testimonial and can suggest health improvement through use; whether the disease-history presentation is misleading under the excerpt also requires assessment.",
+      "notes": "The supplied excerpt does not identify whether the product is an Arzneimittel, Medizinprodukt, or other covered means, and the Anlage to §12 is not provided. The explicit cure framing nevertheless requires legal review and should not be auto-approved.",
+      "latency_ms": 4411
+    },
+    {
+      "id": "holdout_008",
+      "claim": "Enter our giveaway for a chance to win a year's supply — the more you use, the better your skin gets!",
+      "category": "rag_subtle",
+      "ground_truth_verdict": 3,
+      "predicted_verdict": 3,
+      "correct": true,
+      "source": "llm_rag",
+      "cited_sections": [
+        "§11 Abs. 1 Nr. 7 HWG",
+        "§11 Abs. 1 Nr. 13 HWG"
+      ],
+      "reason": "The copy explicitly suggests that increased use improves the consumer’s health/skin and pairs this with a chance-based giveaway for a year’s supply, which can encourage excessive use of an Arzneimittel.",
+      "notes": "The giveaway is prohibited only insofar as it promotes an excessive or inappropriate use of an Arzneimittel; the stated use-escalation message creates that link.",
+      "latency_ms": 3868
+    },
+    {
+      "id": "holdout_009",
+      "claim": "I switched away from needing dermatologist visits after seeing how well this worked, no doctor needed anymore.",
+      "category": "rag_subtle",
+      "ground_truth_verdict": 3,
+      "predicted_verdict": 2,
+      "correct": false,
+      "source": "llm_rag",
+      "cited_sections": [
+        "§11 Abs. 1 Nr. 7 HWG",
+        "§9 Satz 1 HWG"
+      ],
+      "reason": "The statement suggests that using the promoted offering makes dermatologist care unnecessary, implying improved health through use and advertising a potential replacement for in-person medical treatment. The available excerpts do not establish the product/treatment category or whether a statutory exception applies.",
+      "notes": "The product type and the exact service or treatment advertised are not stated; human legal review should confirm whether the §9 exception for communication-media-based treatment could apply.",
+      "latency_ms": 3457
+    },
+    {
+      "id": "holdout_010",
+      "claim": "This oil completely reversed my sun damage in one week.",
+      "category": "rag_subtle",
+      "ground_truth_verdict": 3,
+      "predicted_verdict": 3,
+      "correct": true,
+      "source": "llm_rag",
+      "cited_sections": [
+        "§1 Abs. 1 Nr. 2 Buchst. a HWG",
+        "§11 Abs. 1 Nr. 7 HWG"
+      ],
+      "reason": "The statement promotes an oil with a definite, rapid reversal of “sun damage,” which can be understood as a health-related improvement through use. This goes beyond a purely personal sensory testimonial and uses an absolute efficacy promise.",
+      "notes": "The absolute wording (“completely reversed”) and the one-week result should be removed or replaced with a non-therapeutic, clearly subjective cosmetic description.",
+      "latency_ms": 3215
+    },
+    {
+      "id": "holdout_011",
+      "claim": "Swipe up for 15% off with my code — don't forget this post is sponsored by the brand.",
+      "category": "compliant",
+      "ground_truth_verdict": 0,
+      "predicted_verdict": 0,
+      "correct": true,
+      "source": "llm_rag",
+      "cited_sections": [],
+      "reason": "The post clearly discloses its advertising purpose through “this post is sponsored by the brand.” It contains no product efficacy, health, medical, or misleading testimonial claim addressed by the provided provisions.",
+      "notes": "",
+      "latency_ms": 2531
+    },
+    {
+      "id": "holdout_012",
+      "claim": "Loving the texture of this new moisturizer, definitely adding it to my rotation.",
+      "category": "compliant",
+      "ground_truth_verdict": 0,
+      "predicted_verdict": 0,
+      "correct": true,
+      "source": "llm_rag",
+      "cited_sections": [],
+      "reason": "Purely subjective sensory endorsement with no health, therapeutic, or efficacy claim. The provided provisions do not establish any disclosure requirement for this cosmetic-style statement.",
+      "notes": "",
+      "latency_ms": 2565
+    },
+    {
+      "id": "holdout_013",
+      "claim": "Three weeks in and I'm noticing less redness, but I know everyone's skin reacts differently.",
+      "category": "compliant",
+      "ground_truth_verdict": 0,
+      "predicted_verdict": 2,
+      "correct": false,
+      "source": "llm_rag",
+      "cited_sections": [
+        "§11 Abs. 1 Nr. 7 HWG"
+      ],
+      "reason": "The first-person, qualified observation does not itself generalize a promise to the audience. However, “less redness” may imply an improvement of a skin complaint, making application of the health-improvement prohibition ambiguous under the provided excerpts.",
+      "notes": "It is unclear from the content whether the product is within the scope of the HWG and whether “less redness” is presented as a health-related effect rather than a cosmetic observation. Human legal review should confirm product classification and context.",
+      "latency_ms": 3828
+    },
+    {
+      "id": "holdout_014",
+      "claim": "This cleanser smells amazing and doesn't strip my skin like some others I've tried.",
+      "category": "compliant",
+      "ground_truth_verdict": 0,
+      "predicted_verdict": 0,
+      "correct": true,
+      "source": "llm_rag",
+      "cited_sections": [],
+      "reason": "Purely subjective sensory and cosmetic-use observation; it makes no disease-related, therapeutic, or generalized health-improvement claim under the provided provisions.",
+      "notes": "",
+      "latency_ms": 2493
+    },
+    {
+      "id": "holdout_015",
+      "claim": "I appreciate that this brand lists every ingredient clearly on the box.",
+      "category": "compliant",
+      "ground_truth_verdict": 0,
+      "predicted_verdict": 0,
+      "correct": true,
+      "source": "llm_rag",
+      "cited_sections": [],
+      "reason": "The statement only praises clear ingredient labelling and makes no health, therapeutic, or indication-related claim covered by the provided provisions.",
+      "notes": "",
+      "latency_ms": 2348
+    },
+    {
+      "id": "holdout_016",
+      "claim": "Just sharing my personal skincare shelf — not every product will work the same for you.",
+      "category": "compliant",
+      "ground_truth_verdict": 0,
+      "predicted_verdict": 0,
+      "correct": true,
+      "source": "llm_rag",
+      "cited_sections": [],
+      "reason": "The statement is a non-promotional personal skincare disclaimer and expressly avoids suggesting that products will have the same effect for others. It contains no health, therapeutic, testimonial, or misleading advertising claim covered by the provided provisions.",
+      "notes": "",
+      "latency_ms": 2884
+    },
+    {
+      "id": "holdout_017",
+      "claim": "Honestly this product's just okay for me, wouldn't say it's life changing.",
+      "category": "compliant",
+      "ground_truth_verdict": 0,
+      "predicted_verdict": 0,
+      "correct": true,
+      "source": "llm_rag",
+      "cited_sections": [],
+      "reason": "The statement is a restrained first-person opinion and makes no therapeutic, health-improvement, guarantee, or misleading claim covered by the provided provisions.",
+      "notes": "",
+      "latency_ms": 2992
+    },
+    {
+      "id": "holdout_018",
+      "claim": "This is hands-down the most incredible product I've ever put on my face.",
+      "category": "minor_note",
+      "ground_truth_verdict": 1,
+      "predicted_verdict": 1,
+      "correct": true,
+      "source": "llm_rag",
+      "cited_sections": [],
+      "reason": "The statement is a broad personal endorsement without a concrete health, disease, treatment, or efficacy claim. The provided provisions do not clearly prohibit it.",
+      "notes": "The superlative is a subjective opinion and does not, on its own, make a therapeutic, health-improvement, comparative-medicinal-effect, or guarantee claim under the provided excerpts.",
+      "latency_ms": 3778
+    },
+    {
+      "id": "holdout_019",
+      "claim": "My skin just feels more like itself again since I started this.",
+      "category": "grey_area",
+      "ground_truth_verdict": 2,
+      "predicted_verdict": 0,
+      "correct": false,
+      "source": "llm_rag",
+      "cited_sections": [],
+      "reason": "This is a subjective, first-person statement about how the speaker’s skin feels. It does not make a generalized therapeutic promise or otherwise fall within the provided provisions.",
+      "notes": "",
+      "latency_ms": 2517
+    },
+    {
+      "id": "holdout_020",
+      "claim": "This took away all the tightness I used to feel.",
+      "category": "grey_area",
+      "ground_truth_verdict": 2,
+      "predicted_verdict": 2,
+      "correct": true,
+      "source": "llm_rag",
+      "cited_sections": [
+        "§3 Nr. 2 Buchst. a HWG"
+      ],
+      "reason": "The statement is a first-person account, but “took away all” can be read as an absolute efficacy claim. The provided excerpts do not establish whether this creates a false impression that success can be expected with certainty, so legal review is needed.",
+      "notes": "Clarify whether “tightness” is purely cosmetic/sensory and avoid the absolute “all” if a therapeutic or health-related benefit is intended.",
+      "latency_ms": 5301
+    }
+  ]
+}

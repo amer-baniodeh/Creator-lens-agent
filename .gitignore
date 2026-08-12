@@ -39,6 +39,7 @@ data/processed/*.json
 
 # ── Local-only project notes (not for the public repo) ───────────────────────
 CLAUDE.md
+session-state.md
 
 # ── Testing ───────────────────────────────────────────────────────────────────
 .pytest_cache/

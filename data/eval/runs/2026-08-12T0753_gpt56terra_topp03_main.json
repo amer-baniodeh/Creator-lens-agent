@@ -1,0 +1,508 @@
+{
+  "run_at": "2026-08-12T07:53:49.699718+00:00",
+  "model": "gpt-5.6-terra",
+  "set_type": "main",
+  "note": "Test A: terra with top_p=0.3 instead of default sampling (temperature=0 is rejected by this model).",
+  "metrics": {
+    "n": 33,
+    "exact_match_accuracy": 0.697,
+    "off_by_one_accuracy": 0.848,
+    "severe_miss_rate": 0.152,
+    "mean_absolute_error": 0.485
+  },
+  "by_category": {
+    "blocklist": {
+      "n": 5,
+      "exact_match_accuracy": 1.0,
+      "off_by_one_accuracy": 1.0,
+      "severe_miss_rate": 0.0,
+      "mean_absolute_error": 0.0
+    },
+    "compliant": {
+      "n": 12,
+      "exact_match_accuracy": 0.833,
+      "off_by_one_accuracy": 0.833,
+      "severe_miss_rate": 0.167,
+      "mean_absolute_error": 0.333
+    },
+    "grey_area": {
+      "n": 3,
+      "exact_match_accuracy": 0.333,
+      "off_by_one_accuracy": 0.333,
+      "severe_miss_rate": 0.667,
+      "mean_absolute_error": 1.333
+    },
+    "minor_note": {
+      "n": 2,
+      "exact_match_accuracy": 1.0,
+      "off_by_one_accuracy": 1.0,
+      "severe_miss_rate": 0.0,
+      "mean_absolute_error": 0.0
+    },
+    "rag_subtle": {
+      "n": 11,
+      "exact_match_accuracy": 0.455,
+      "off_by_one_accuracy": 0.909,
+      "severe_miss_rate": 0.091,
+      "mean_absolute_error": 0.727
+    }
+  },
+  "predictions": [
+    {
+      "id": "eval_001",
+      "claim": "This serum cures acne in just 7 days!",
+      "category": "blocklist",
+      "ground_truth_verdict": 3,
+      "predicted_verdict": 3,
+      "correct": true,
+      "source": "blocklist",
+      "cited_sections": [],
+      "reason": "Text contains 1 forbidden phrase(s) under German/EU health advertising law.",
+      "notes": "",
+      "latency_ms": 0
+    },
+    {
+      "id": "eval_002",
+      "claim": "Clinically proven to eliminate wrinkles overnight.",
+      "category": "blocklist",
+      "ground_truth_verdict": 3,
+      "predicted_verdict": 3,
+      "correct": true,
+      "source": "blocklist",
+      "cited_sections": [],
+      "reason": "Text contains 1 forbidden phrase(s) under German/EU health advertising law.",
+      "notes": "",
+      "latency_ms": 0
+    },
+    {
+      "id": "eval_003",
+      "claim": "Dermatologist approved, guaranteed results with no side effects.",
+      "category": "blocklist",
+      "ground_truth_verdict": 3,
+      "predicted_verdict": 3,
+      "correct": true,
+      "source": "blocklist",
+      "cited_sections": [],
+      "reason": "Text contains 3 forbidden phrase(s) under German/EU health advertising law.",
+      "notes": "",
+      "latency_ms": 0
+    },
+    {
+      "id": "eval_004",
+      "claim": "100% effective, works every time.",
+      "category": "blocklist",
+      "ground_truth_verdict": 3,
+      "predicted_verdict": 3,
+      "correct": true,
+      "source": "blocklist",
+      "cited_sections": [],
+      "reason": "Text contains 2 forbidden phrase(s) under German/EU health advertising law.",
+      "notes": "",
+      "latency_ms": 0
+    },
+    {
+      "id": "eval_005",
+      "claim": "This is a permanent solution — forever clear skin.",
+      "category": "blocklist",
+      "ground_truth_verdict": 3,
+      "predicted_verdict": 3,
+      "correct": true,
+      "source": "blocklist",
+      "cited_sections": [],
+      "reason": "Text contains 2 forbidden phrase(s) under German/EU health advertising law.",
+      "notes": "",
+      "latency_ms": 0
+    },
+    {
+      "id": "eval_006",
+      "claim": "My dermatologist friend Julia recommends this brand to all her patients.",
+      "category": "rag_subtle",
+      "ground_truth_verdict": 3,
+      "predicted_verdict": 3,
+      "correct": true,
+      "source": "llm_rag",
+      "cited_sections": [
+        "§11 Abs. 1 Nr. 2 HWG"
+      ],
+      "reason": "The statement uses the recommendation of a person working in healthcare (a dermatologist) to encourage product consumption in advertising directed outside professional circles.",
+      "notes": "",
+      "latency_ms": 3821
+    },
+    {
+      "id": "eval_007",
+      "claim": "As seen on TV and loved by celebrities everywhere — the product everyone's talking about.",
+      "category": "rag_subtle",
+      "ground_truth_verdict": 3,
+      "predicted_verdict": 2,
+      "correct": false,
+      "source": "llm_rag",
+      "cited_sections": [
+        "§11 Abs. 1 Nr. 2 HWG"
+      ],
+      "reason": "The phrase invokes celebrities' approval and may refer to recommendations by persons whose fame can encourage medicinal-product consumption. Because the product and endorsement context are unspecified, this is a grey area under the provided provision.",
+      "notes": "The content does not identify the product category or whether the cited celebrities actually made recommendations. Human review should confirm whether the wording is a real, substantiated celebrity endorsement and whether the advertised item falls within §11 HWG's scope.",
+      "latency_ms": 5869
+    },
+    {
+      "id": "eval_008",
+      "claim": "Look at this insane before and after — I couldn't believe the difference after one week.",
+      "category": "rag_subtle",
+      "ground_truth_verdict": 3,
+      "predicted_verdict": 2,
+      "correct": false,
+      "source": "llm_rag",
+      "cited_sections": [
+        "§11 Abs. 1 Satz 3 Nr. 1 HWG",
+        "§3 Nr. 2 Buchstabe a HWG"
+      ],
+      "reason": "The content is ambiguous without the advertised product or treatment. An explicit before/after comparison would be prohibited for the specified operative plastic-surgical interventions, while the claimed dramatic one-week result may also be read as implying a certain success.",
+      "notes": "Clarify what is being advertised and whether the post includes an actual before/after comparison. If it promotes an operative plastic-surgical procedure, comparative before/after advertising is expressly prohibited. The wording should also avoid implying a reliably expected result within one week.",
+      "latency_ms": 7560
+    },
+    {
+      "id": "eval_009",
+      "claim": "If you don't use this, your skin will only get worse — but with it, you'll glow.",
+      "category": "rag_subtle",
+      "ground_truth_verdict": 3,
+      "predicted_verdict": 3,
+      "correct": true,
+      "source": "llm_rag",
+      "cited_sections": [
+        "§11 Abs. 1 Nr. 7 HWG"
+      ],
+      "reason": "The wording expressly suggests that non-use will worsen the consumer’s health/skin condition and that use will improve it. This is the generalized promotional promise prohibited by the provided provision.",
+      "notes": "",
+      "latency_ms": 2772
+    },
+    {
+      "id": "eval_010",
+      "claim": "Use code JULIA20 for 20% off — swipe up! (no ad disclosure shown anywhere in the post)",
+      "category": "rag_subtle",
+      "ground_truth_verdict": 3,
+      "predicted_verdict": 0,
+      "correct": false,
+      "source": "llm_rag",
+      "cited_sections": [],
+      "reason": "No prohibited health-related claim or other conduct covered by the supplied HWG provisions appears in the text.",
+      "notes": "The supplied excerpts contain no general requirement to label influencer advertising as an ad. The explicit discount code and call to action also make the promotional purpose apparent rather than concealed.",
+      "latency_ms": 5235
+    },
+    {
+      "id": "eval_011",
+      "claim": "This natural remedy works exactly like prescription retinoids, without the hassle.",
+      "category": "rag_subtle",
+      "ground_truth_verdict": 3,
+      "predicted_verdict": 3,
+      "correct": true,
+      "source": "llm_rag",
+      "cited_sections": [
+        "§11 Abs. 2 HWG",
+        "§10 Abs. 1 HWG"
+      ],
+      "reason": "The statement expressly claims that the remedy has the same effect as prescription retinoids, which is prohibited comparative equivalence advertising for Arzneimittel outside professional circles. If it promotes a prescription-only medicine itself, public advertising would additionally be prohibited.",
+      "notes": "The provided text does not establish whether the advertised “natural remedy” is an Arzneimittel or whether the referenced retinoids are prescription-only; either point should be confirmed in review.",
+      "latency_ms": 3419
+    },
+    {
+      "id": "eval_012",
+      "claim": "After using this for two weeks my eczema was completely gone and never came back.",
+      "category": "rag_subtle",
+      "ground_truth_verdict": 3,
+      "predicted_verdict": 3,
+      "correct": true,
+      "source": "llm_rag",
+      "cited_sections": [
+        "§12 Abs. 1 Nr. 1 HWG",
+        "§11 Abs. 1 Nr. 7 HWG"
+      ],
+      "reason": "The statement advertises complete and lasting elimination of eczema, a condition covered by the prohibition on public advertising relating to the elimination or alleviation of listed diseases. It also goes beyond a subjective experience by presenting a definitive, durable health-improvement outcome from use.",
+      "notes": "",
+      "latency_ms": 3308
+    },
+    {
+      "id": "eval_013",
+      "claim": "This product will definitely fix your acne, I promise.",
+      "category": "rag_subtle",
+      "ground_truth_verdict": 3,
+      "predicted_verdict": 3,
+      "correct": true,
+      "source": "llm_rag",
+      "cited_sections": [
+        "§3 Nr. 2 Buchstabe a HWG"
+      ],
+      "reason": "The statement gives an unconditional assurance that the product will successfully treat acne. It therefore falsely conveys that success can be expected with certainty.",
+      "notes": "",
+      "latency_ms": 2994
+    },
+    {
+      "id": "eval_014",
+      "claim": "There's really no reason to book a dermatologist appointment when you have this in your routine.",
+      "category": "rag_subtle",
+      "ground_truth_verdict": 3,
+      "predicted_verdict": 2,
+      "correct": false,
+      "source": "llm_rag",
+      "cited_sections": [
+        "§11 Abs. 1 Nr. 7 HWG"
+      ],
+      "reason": "The statement can be understood as implying that using the product makes professional dermatological assessment unnecessary, i.e. that health can be improved through use. However, the product type and whether the HWG applies are not established by the provided content, so this requires legal review.",
+      "notes": "Clarify the product category and replace the implied substitution of professional dermatological care with a non-medical, non-therapeutic routine statement.",
+      "latency_ms": 6502
+    },
+    {
+      "id": "eval_015",
+      "claim": "I finally found something that treats my rosacea.",
+      "category": "rag_subtle",
+      "ground_truth_verdict": 3,
+      "predicted_verdict": 2,
+      "correct": false,
+      "source": "llm_rag",
+      "cited_sections": [
+        "§5 HWG"
+      ],
+      "reason": "The statement advertises treatment of the medical condition rosacea. The supplied provisions only clearly prohibit such an indication claim if the product is a registered or registration-exempt homeopathic medicinal product; the content does not identify the product category, so legal review is required.",
+      "notes": "Clarify the product category and, if it is a medicinal product, its authorization and approved indication. If it is a registered or registration-exempt homeopathic medicinal product, remove the indication claim entirely.",
+      "latency_ms": 5187
+    },
+    {
+      "id": "eval_028",
+      "claim": "Trust me, this WILL work for you.",
+      "category": "rag_subtle",
+      "ground_truth_verdict": 3,
+      "predicted_verdict": 2,
+      "correct": false,
+      "source": "llm_rag",
+      "cited_sections": [
+        "§9 HWG"
+      ],
+      "reason": "The absolute, generalized promise creates a health-adjacent efficacy concern, but the supplied provisions do not clearly cover an unspecified product or outcome. §9 HWG would apply only if this is advertising for diagnosis or treatment by remote treatment.",
+      "notes": "The content does not identify a disease, condition, treatment, or remote-treatment service, so the provided excerpts do not clearly establish a violation. Human legal review should determine the advertised product and context.",
+      "latency_ms": 5850
+    },
+    {
+      "id": "eval_016",
+      "claim": "I've been using this serum for a month and my skin feels really soft.",
+      "category": "compliant",
+      "ground_truth_verdict": 0,
+      "predicted_verdict": 0,
+      "correct": true,
+      "source": "llm_rag",
+      "cited_sections": [],
+      "reason": "The statement is a first-person, subjective sensory observation (“my skin feels really soft”) and does not make a generalized health-improvement, therapeutic, or guarantee claim.",
+      "notes": "",
+      "latency_ms": 2562
+    },
+    {
+      "id": "eval_017",
+      "claim": "This is my honest review after 6 weeks of use — results vary by skin type.",
+      "category": "compliant",
+      "ground_truth_verdict": 0,
+      "predicted_verdict": 2,
+      "correct": false,
+      "source": "llm_rag",
+      "cited_sections": [
+        "§11 Abs. 1 Nr. 9 HWG"
+      ],
+      "reason": "The phrase presents the content as an “honest review,” but does not itself make a possible advertising purpose clear. The provided provision prohibits publications whose advertising purpose is misleading or not clearly recognizable; the available text does not permit a definitive assessment.",
+      "notes": "Whether this is advertising and whether its commercial purpose is sufficiently apparent cannot be determined from the isolated sentence. A clear advertising disclosure/context would resolve the issue.",
+      "latency_ms": 7665
+    },
+    {
+      "id": "eval_018",
+      "claim": "I like how lightweight this moisturizer feels under makeup.",
+      "category": "compliant",
+      "ground_truth_verdict": 0,
+      "predicted_verdict": 0,
+      "correct": true,
+      "source": "llm_rag",
+      "cited_sections": [],
+      "reason": "Purely sensory, subjective observation with no medical, therapeutic, or efficacy claim.",
+      "notes": "",
+      "latency_ms": 2280
+    },
+    {
+      "id": "eval_019",
+      "claim": "Ad: paid partnership with Formel Skin. Use code JULIA20 for a discount.",
+      "category": "compliant",
+      "ground_truth_verdict": 0,
+      "predicted_verdict": 0,
+      "correct": true,
+      "source": "llm_rag",
+      "cited_sections": [],
+      "reason": "The content clearly identifies itself as a paid partnership and contains only a discount-code promotion. It makes no health, efficacy, comparative, testimonial, or other claim addressed by the provided provisions.",
+      "notes": "",
+      "latency_ms": 3277
+    },
+    {
+      "id": "eval_020",
+      "claim": "Everyone's skin is different, so I'd recommend chatting with your dermatologist before trying prescription treatments.",
+      "category": "compliant",
+      "ground_truth_verdict": 0,
+      "predicted_verdict": 0,
+      "correct": true,
+      "source": "llm_rag",
+      "cited_sections": [],
+      "reason": "The content recommends consulting a dermatologist before trying prescription treatments and makes no prohibited efficacy, endorsement, remote-treatment, or public advertising claim under the provided provisions.",
+      "notes": "",
+      "latency_ms": 2508
+    },
+    {
+      "id": "eval_021",
+      "claim": "This packaging is so cute, I love unboxing new skincare.",
+      "category": "compliant",
+      "ground_truth_verdict": 0,
+      "predicted_verdict": 0,
+      "correct": true,
+      "source": "llm_rag",
+      "cited_sections": [],
+      "reason": "The content is a purely aesthetic and personal unboxing comment and makes no health, efficacy, medical, or misleading advertising claim covered by the provided provisions.",
+      "notes": "",
+      "latency_ms": 2358
+    },
+    {
+      "id": "eval_022",
+      "claim": "I read the ingredient list and I like that it has niacinamide.",
+      "category": "compliant",
+      "ground_truth_verdict": 0,
+      "predicted_verdict": 0,
+      "correct": true,
+      "source": "llm_rag",
+      "cited_sections": [],
+      "reason": "The statement only expresses a personal preference for the presence of niacinamide in the ingredient list and makes no health, therapeutic, or efficacy claim.",
+      "notes": "",
+      "latency_ms": 2890
+    },
+    {
+      "id": "eval_023",
+      "claim": "Not sponsored, just genuinely enjoy this product.",
+      "category": "compliant",
+      "ground_truth_verdict": 0,
+      "predicted_verdict": 0,
+      "correct": true,
+      "source": "llm_rag",
+      "cited_sections": [],
+      "reason": "The statement only says that the speaker genuinely enjoys the product and notes that it is not sponsored. It contains no health, efficacy, endorsement, publication, or misleading-advertising claim covered by the provided provisions.",
+      "notes": "",
+      "latency_ms": 3703
+    },
+    {
+      "id": "eval_024",
+      "claim": "My skin texture has visibly improved since I started this routine two months ago.",
+      "category": "compliant",
+      "ground_truth_verdict": 0,
+      "predicted_verdict": 2,
+      "correct": false,
+      "source": "llm_rag",
+      "cited_sections": [
+        "§11 Abs. 1 Nr. 7 HWG"
+      ],
+      "reason": "The statement claims a visible improvement in skin texture from using a routine, which may imply that health is improved through use. The provided excerpts do not establish the product category or clearly resolve whether this cosmetic-style appearance claim falls within the prohibition.",
+      "notes": "It is unclear from the content whether the routine is an in-scope medicinal product, medical device, or other means advertised for relief of a condition; this should be confirmed in legal review.",
+      "latency_ms": 5163
+    },
+    {
+      "id": "eval_025",
+      "claim": "This is part of a paid collaboration with the brand — as always, opinions are my own.",
+      "category": "compliant",
+      "ground_truth_verdict": 0,
+      "predicted_verdict": 0,
+      "correct": true,
+      "source": "llm_rag",
+      "cited_sections": [],
+      "reason": "The paid collaboration is clearly disclosed, and the text contains no product efficacy, health, testimonial, expert-endorsement, or other claim addressed by the provided provisions.",
+      "notes": "",
+      "latency_ms": 3765
+    },
+    {
+      "id": "eval_029",
+      "claim": "Some people notice a difference in a few days, results vary.",
+      "category": "compliant",
+      "ground_truth_verdict": 0,
+      "predicted_verdict": 0,
+      "correct": true,
+      "source": "llm_rag",
+      "cited_sections": [],
+      "reason": "No guaranteed success is promised, and the wording does not clearly claim that health will be improved through use. On the supplied text alone, no cited provision is clearly triggered.",
+      "notes": "The statement is cautious and expressly notes variable results; the provided excerpts do not establish that it makes a prohibited or misleading health claim without product context.",
+      "latency_ms": 2970
+    },
+    {
+      "id": "eval_030",
+      "claim": "This brand donates part of proceeds to skin health charities.",
+      "category": "compliant",
+      "ground_truth_verdict": 0,
+      "predicted_verdict": 0,
+      "correct": true,
+      "source": "llm_rag",
+      "cited_sections": [],
+      "reason": "The statement describes a charitable donation and makes no claim about disease detection, treatment, relief, product efficacy, or an impermissible inducement covered by the provided provisions.",
+      "notes": "",
+      "latency_ms": 3032
+    },
+    {
+      "id": "eval_026",
+      "claim": "This brand completely changed my skincare routine.",
+      "category": "minor_note",
+      "ground_truth_verdict": 1,
+      "predicted_verdict": 1,
+      "correct": true,
+      "source": "llm_rag",
+      "cited_sections": [],
+      "reason": "This is a subjective statement about the speaker’s skincare routine and contains no claim covered by the provided HWG provisions.",
+      "notes": "“Completely changed” is broad promotional language, but it does not make a medical, therapeutic, comparative, or guaranteed-effect claim.",
+      "latency_ms": 4395
+    },
+    {
+      "id": "eval_027",
+      "claim": "It's basically magic for dry skin.",
+      "category": "minor_note",
+      "ground_truth_verdict": 1,
+      "predicted_verdict": 1,
+      "correct": true,
+      "source": "llm_rag",
+      "cited_sections": [],
+      "reason": "“Basically magic” is a vague promotional exaggeration for dry skin and does not expressly promise disease treatment, a health improvement, or a guarantee under the provided excerpts.",
+      "notes": "The wording is hyperbolic, but the provided provisions do not clearly establish a prohibited health-improvement or therapeutic claim from this brief statement alone.",
+      "latency_ms": 4337
+    },
+    {
+      "id": "eval_031",
+      "claim": "This gave my skin the reset it needed.",
+      "category": "grey_area",
+      "ground_truth_verdict": 2,
+      "predicted_verdict": 0,
+      "correct": false,
+      "source": "llm_rag",
+      "cited_sections": [],
+      "reason": "The personal, metaphorical statement does not clearly advertise recognition, prevention, elimination, or relief of any disease or condition listed in the §12 HWG annex.",
+      "notes": "The wording is vague and does not identify a disease, condition, product category, or a prohibited indication covered by the provided excerpts.",
+      "latency_ms": 2820
+    },
+    {
+      "id": "eval_032",
+      "claim": "I feel like my skin finally found balance with this in my routine.",
+      "category": "grey_area",
+      "ground_truth_verdict": 2,
+      "predicted_verdict": 0,
+      "correct": false,
+      "source": "llm_rag",
+      "cited_sections": [],
+      "reason": "The statement is a subjective, first-person impression and does not mention an application area for a homeopathic medicinal product. The provided provisions do not otherwise clearly prohibit this wording.",
+      "notes": "",
+      "latency_ms": 3245
+    },
+    {
+      "id": "eval_033",
+      "claim": "This really evened things out for me.",
+      "category": "grey_area",
+      "ground_truth_verdict": 2,
+      "predicted_verdict": 2,
+      "correct": true,
+      "source": "llm_rag",
+      "cited_sections": [],
+      "reason": "The statement is a vague first-person testimonial. None of the provided provisions clearly regulates or prohibits this claim on its own.",
+      "notes": "The product category and the meaning of “evened things out” are not specified; review in context if it could refer to a therapeutic or health-related effect.",
+      "latency_ms": 3391
+    }
+  ]
+}

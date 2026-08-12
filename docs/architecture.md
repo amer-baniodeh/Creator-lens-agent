@@ -138,6 +138,7 @@ every run and a `runs/` archive so nothing is overwritten.
 | Compliance checker accuracy | `06_compliance_eval.ipynb` | `data/eval/SUMMARY.md` |
 | RAG answer quality (faithfulness + correctness) | `04_langsmith_eval.ipynb` | `data/eval/RAG_SUMMARY.md` |
 | Cost & latency (from LangSmith traces) | `07_cost_latency_report.ipynb` | `data/metrics/SUMMARY.md` |
+| Security — prompt leakage, jailbreaking, injection | ad hoc script (`data/eval/security_eval.json` test set) | `data/eval/SECURITY_SUMMARY.md` |
 
 Headline results as of the last run (see the summary files for current numbers):
 compliance verdict exact-match accuracy ~90-91% across two independent labeled sets
@@ -156,7 +157,10 @@ professional-endorsement claim type; a cross-lingual RAG retrieval gap where a
 correct non-English chunk can be missed when surrounded by content in another
 language; retrieval quality measurably degrades as the video corpus grows
 (90%→60% hit rate observed after doubling from 5 to 11 videos) and hasn't yet
-been addressed beyond raising `TOP_K_RESULTS`.
+been addressed beyond raising `TOP_K_RESULTS`; a confirmed prompt-injection
+vulnerability in `check_compliance` — text embedded in the content being graded can
+flip a real violation to "compliant" or vice versa (see `data/eval/SECURITY_SUMMARY.md`),
+not yet hardened.
 
 ## Notebooks
 

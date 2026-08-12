@@ -28,13 +28,34 @@ from src.utils.config import OPENAI_API_KEY, OPENAI_LLM_MODEL
 from src.utils.logger import logger
 
 
-def _parse_structured(client: OpenAI, model: str, messages: list[dict], response_format):
+def _parse_structured(client: OpenAI, model: str, messages: list[dict], response_format, top_p: float | None = None):
     """
     Wraps client.chat.completions.parse() with a fallback for reasoning-family
     models (e.g. gpt-5.x) that reject an explicit temperature=0 — some only
     support their default temperature. Try deterministic first, fall back to
     the model's default if it refuses.
+
+    `top_p` is eval-only: when set, it's used INSTEAD of temperature=0 (some
+    models that reject a fixed temperature still accept top_p as a determinism
+    knob). Leave it None for normal/production calls — behavior is unchanged.
     """
+    if top_p is not None:
+        try:
+            return client.chat.completions.parse(
+                model=model,
+                messages=messages,
+                top_p=top_p,
+                response_format=response_format,
+            )
+        except BadRequestError as e:
+            if "top_p" in str(e).lower():
+                logger.info(f"Model '{model}' doesn't support top_p — falling back to its default sampling.")
+                return client.chat.completions.parse(
+                    model=model,
+                    messages=messages,
+                    response_format=response_format,
+                )
+            raise
     try:
         return client.chat.completions.parse(
             model=model,
@@ -177,7 +198,7 @@ A claim leans toward non-compliant (verdict 3) if it:
 """.strip()
 
 
-def _llm_classify(text: str, model: str = OPENAI_LLM_MODEL) -> dict:
+def _llm_classify(text: str, model: str = OPENAI_LLM_MODEL, top_p: float | None = None) -> dict:
     """Ungrounded classifier — relies on GPT's general training knowledge.
     Used only as a fallback when no legal corpus has been ingested yet."""
     client = OpenAI(api_key=OPENAI_API_KEY)
@@ -188,6 +209,7 @@ def _llm_classify(text: str, model: str = OPENAI_LLM_MODEL) -> dict:
             {"role": "user", "content": f"Check this text for compliance:\n\n{text}"},
         ],
         response_format=ComplianceClassification,
+        top_p=top_p,
     )
     return response.choices[0].message.parsed.model_dump()
 
@@ -259,7 +281,7 @@ def _retrieve_relevant_law(text: str, k: int = 3) -> list[dict]:
         return []
 
 
-def _llm_classify_grounded(text: str, model: str = OPENAI_LLM_MODEL) -> dict:
+def _llm_classify_grounded(text: str, model: str = OPENAI_LLM_MODEL, top_p: float | None = None) -> dict:
     """
     RAG-grounded classifier: retrieves real legal text relevant to the claim,
     then asks GPT to grade compliance citing specific provisions.
@@ -268,7 +290,7 @@ def _llm_classify_grounded(text: str, model: str = OPENAI_LLM_MODEL) -> dict:
     relevant_law = _retrieve_relevant_law(text)
 
     if not relevant_law:
-        result = _llm_classify(text, model=model)
+        result = _llm_classify(text, model=model, top_p=top_p)
         result["cited_sections"] = []
         result["grounded"] = False
         return result
@@ -292,6 +314,7 @@ def _llm_classify_grounded(text: str, model: str = OPENAI_LLM_MODEL) -> dict:
             },
         ],
         response_format=ComplianceClassification,
+        top_p=top_p,
     )
     result = response.choices[0].message.parsed.model_dump()
     result["grounded"] = True
@@ -307,7 +330,12 @@ def _finalize(result: dict) -> dict:
     return result
 
 
-def check_compliance(text: str, use_llm_fallback: bool = True, model: str = OPENAI_LLM_MODEL) -> dict:
+def check_compliance(
+    text: str,
+    use_llm_fallback: bool = True,
+    model: str = OPENAI_LLM_MODEL,
+    top_p: float | None = None,
+) -> dict:
     """
     Check a piece of text for German/EU health advertising compliance.
 
@@ -317,6 +345,9 @@ def check_compliance(text: str, use_llm_fallback: bool = True, model: str = OPEN
                           no blocklist match is found, to catch subtle violations.
         model: OpenAI model to use for the LLM layer. Defaults to the configured
                OPENAI_LLM_MODEL — override for eval/comparison purposes only.
+        top_p: Eval-only sampling override. When set, used INSTEAD of the default
+               temperature=0 behavior. None (default) leaves production behavior
+               unchanged — only pass this from eval/comparison code.
 
     Returns:
         {
@@ -348,7 +379,7 @@ def check_compliance(text: str, use_llm_fallback: bool = True, model: str = OPEN
 
     # Layer 2: RAG-grounded LLM classifier for edge cases
     if use_llm_fallback:
-        result = _llm_classify_grounded(text, model=model)
+        result = _llm_classify_grounded(text, model=model, top_p=top_p)
         result["source"] = "llm_rag" if result.get("grounded") else "llm"
         result.setdefault("cited_sections", [])
         result = _finalize(result)

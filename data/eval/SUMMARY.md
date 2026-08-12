@@ -12,6 +12,12 @@ Verdict scale: 0=fully compliant, 1=compliant with a minor note, 2=grey area (ne
 | 2026-08-10 12:14 | gpt-4o-mini | Holdout | 20 | 90.0% | 90.0% | 10.0% | 0.200 | Post-relabel baseline (gpt-4o-mini), 4-level verdict scale with Structured Outputs + few-shot exemplars. |
 | 2026-08-10 12:16 | gpt-5.6-terra | Main | 33 | 66.7% | 90.9% | 9.1% | 0.424 | Post-relabel baseline (gpt-5.6-terra), 4-level verdict scale with Structured Outputs + few-shot exemplars. |
 | 2026-08-10 12:18 | gpt-5.6-terra | Holdout | 20 | 60.0% | 90.0% | 10.0% | 0.500 | Post-relabel baseline (gpt-5.6-terra), 4-level verdict scale with Structured Outputs + few-shot exemplars. |
+| 2026-08-12 07:53 | gpt-5.6-terra | Main | 33 | 69.7% | 84.8% | 15.2% | 0.485 | Test A: terra with top_p=0.3 instead of default sampling (temperature=0 is rejected by this model). |
+| 2026-08-12 07:54 | gpt-5.6-terra | Holdout | 20 | 70.0% | 90.0% | 10.0% | 0.400 | Test A: terra with top_p=0.3 instead of default sampling (temperature=0 is rejected by this model). |
+| 2026-08-12 08:02 | gpt-5.6-terra | Main | 33 | 81.8% | 93.9% | 6.1% | 0.242 | Test B: terra, majority verdict across 3 runs at default sampling (isolates single-run noise). |
+| 2026-08-12 08:05 | gpt-5.6-terra | Holdout | 20 | 80.0% | 90.0% | 10.0% | 0.300 | Test B: terra, majority verdict across 3 runs at default sampling (isolates single-run noise). |
+| 2026-08-12 08:21 | gpt-4o-mini | Main | 33 | 90.9% | 90.9% | 9.1% | 0.182 | Test C (control): gpt-4o-mini with top_p=0.3 instead of temperature=0 — sanity check that the knob itself doesn't hurt. |
+| 2026-08-12 08:22 | gpt-4o-mini | Holdout | 20 | 95.0% | 95.0% | 5.0% | 0.100 | Test C (control): gpt-4o-mini with top_p=0.3 instead of temperature=0 — sanity check that the knob itself doesn't hurt. |
 
 ## Where the full detail lives
 
