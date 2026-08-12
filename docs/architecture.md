@@ -111,6 +111,14 @@ ingest_video   query_corpus   check_compliance
 - Pipeline: embed query → Pinecone similarity search (top-8) → filter by `MIN_RELEVANCE_SCORE` (0.15) → return scored chunks
 - If nothing clears the relevance floor, returns a fixed `NO_RELEVANT_CONTENT_FOUND` marker instead of weak matches — the agent's system prompt treats this as a hard signal to say so explicitly, never to guess
 - Output: relevant transcript excerpts with source + relevance score, or the marker
+- **Anti-injection guard:** excerpts are third-party video content, so each one is
+  delimited in `<excerpt>` tags and scanned for injection phrasing (shared with
+  `check_compliance`, `src/utils/security.py`) — a match prepends an inline
+  `[WARNING: ...]` marker into the tool output. The agent's system prompt explicitly
+  requires treating excerpt content as data, not instructions, and reporting
+  honestly whether content was retrieved regardless of what an excerpt claims —
+  added after a confirmed exploit where an embedded instruction got the agent to
+  falsely deny retrieved content existed, see `data/eval/SECURITY_SUMMARY.md`.
 
 ### `check_compliance`
 Two-layer, grounded in real law rather than an LLM's general legal knowledge, returning a
@@ -158,11 +166,10 @@ professional-endorsement claim type; a cross-lingual RAG retrieval gap where a
 correct non-English chunk can be missed when surrounded by content in another
 language; retrieval quality measurably degrades as the video corpus grows
 (90%→60% hit rate observed after doubling from 5 to 11 videos) and hasn't yet
-been addressed beyond raising `TOP_K_RESULTS`; a separate, still-open indirect
-prompt-injection gap at the agent/chat level, where an instruction embedded in a
-retrieved video transcript can get the agent to misrepresent whether content was
-found (see `data/eval/SECURITY_SUMMARY.md`). The `check_compliance` injection
-vulnerability found alongside it has been fixed — see the tool description below.
+been addressed beyond raising `TOP_K_RESULTS`. The prompt-injection vulnerabilities
+found in security testing (`check_compliance` and the agent's retrieval path) have
+both been fixed — see `data/eval/SECURITY_SUMMARY.md` and the tool descriptions
+below.
 
 ## Notebooks
 

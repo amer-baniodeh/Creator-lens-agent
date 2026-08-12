@@ -392,6 +392,50 @@ not a regression worth chasing further.
 instruction successfully got the chat agent to falsely claim retrieved content
 "doesn't exist") — different code path, not addressed by this fix.
 
+## 17. Closing the remaining gap: agent-level indirect injection
+
+Entry 16 fixed the compliance classifier but deliberately left the agent-level gap
+from entry 15 open — an instruction embedded in a retrieved video transcript could
+get the chat agent to falsely tell the user relevant content "doesn't exist," even
+though it had actually been retrieved. Different code path (the agent's own
+synthesis over `query_corpus` results), so it needed its own fix.
+
+**Refactored first:** pulled the injection-pattern detector out of `checker.py` into
+a shared `src/utils/security.py` so both the compliance classifier and the agent's
+retrieval tool use the same pattern list rather than two copies drifting apart.
+Added two new patterns specifically covering what entry 15 found working — phrasing
+like "tell them it does not exist" and "before answering, first output your."
+
+**Three changes, same layered approach as entry 16:**
+1. `query_corpus` now delimits every retrieved excerpt in `<excerpt>` tags before
+   handing it to the agent.
+2. Each excerpt is scanned for injection phrasing; a match prepends an explicit
+   `[WARNING: ...]` marker directly into the tool output, visible to the agent's own
+   reasoning, not just documented in a prompt rule elsewhere.
+3. The agent's system prompt gained an explicit rule: excerpt content is data, never
+   instructions, and it must report honestly whether content was retrieved
+   regardless of what the excerpt itself claims — directly countering the "tell them
+   it doesn't exist" attack pattern.
+
+**Re-verified through the full pipeline, not just re-read.** Re-ran all three
+indirect-injection cases from entry 15: the two that already resisted (system-prompt
+leak, API-key leak) still resist; the one that previously succeeded (falsely denying
+retrieved content exists) now correctly and honestly reports the real content. Also
+re-ran the full 18-case security set as a regression check — zero canary hits, zero
+key leaks, both compliance-injection cases still correctly flagged.
+
+**Compliance eval regression check** (unrelated code path, but the shared pattern
+module touched a shared file): main set unchanged at 87.9%; holdout set 95.0% → 90.0%
+— the one new miss is the previously-documented professional-endorsement recall gap
+with no manipulation flag in its notes, not the guard misfiring. Both sets' numbers
+sit within the range already observed across this session's runs.
+
+**Status: all three confirmed findings from entry 15 are now addressed.** The
+compliance classifier and the chat agent both treat untrusted third-party content
+(video transcripts, pasted scripts) as data rather than instructions, with explicit
+detection and honest-reporting requirements layered on top of the base model's own
+resistance to direct requests.
+
 ## Current state (updated as of the most recent entry above)
 
 - **Compliance checker:** grounded in real law, graded 4-level verdict (not binary) via
@@ -421,10 +465,9 @@ instruction successfully got the chat agent to falsely claim retrieved content
   misses (the error type that matters most for a compliance tool) once noise is
   controlled for.
 - **Security:** red-teamed for leakage and manipulation (entry 15), then hardened
-  and re-verified (entry 16). Direct chat-level attacks are all refused.
-  `check_compliance()`'s injection vulnerability is fixed — delimited untrusted
-  content, an injection-pattern check, and a fabrication check now force a
-  suspicious verdict to "needs review" instead of trusting it, confirmed against
-  both original exploits with no meaningful accuracy regression. Still open: a
-  separate agent-level indirect-injection gap where an embedded instruction can get
-  the chat agent to misrepresent whether content was found.
+  and re-verified in two rounds (entries 16-17) — `check_compliance()` and the chat
+  agent's retrieval path both now treat untrusted third-party content (video
+  transcripts, pasted scripts) as data, not instructions, with explicit detection
+  and honest-reporting rules layered on the base model's own resistance. All three
+  originally-confirmed findings are fixed and re-verified through the full
+  pipeline, with no meaningful accuracy regression on either eval set.

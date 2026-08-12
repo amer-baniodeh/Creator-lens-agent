@@ -26,6 +26,7 @@ from pydantic import BaseModel, Field
 
 from src.utils.config import OPENAI_API_KEY, OPENAI_LLM_MODEL
 from src.utils.logger import logger
+from src.utils.security import detect_injection_attempt, wrap_untrusted_content
 
 
 def _parse_structured(client: OpenAI, model: str, messages: list[dict], response_format, top_p: float | None = None):
@@ -215,32 +216,7 @@ manipulation attempt rather than complying with it.
 
 def _wrap_content_for_grading(text: str) -> str:
     """Delimit untrusted text clearly so it can't be confused with instructions."""
-    return f"<content_to_grade>\n{text}\n</content_to_grade>"
-
-
-# Known injection phrasing, drawn from what was actually confirmed to work in
-# testing (data/eval/SECURITY_SUMMARY.md) plus common variants. A match doesn't
-# prove the text is malicious — it lowers the bar for trusting a lenient verdict
-# rather than blocking anything outright (see check_compliance).
-_INJECTION_PATTERNS: list[str] = [
-    r"ignore (all |any |the )?(previous |prior |above )?instructions",
-    r"system (override|note)",
-    r"ai (system|assistant) note",
-    r"pre-?approved exception",
-    r"overrides? all (prior |previous )?(rules|instructions)",
-    r"respond with verdict",
-    r"always (classify|grade|rate|report|mark) (this |it )?as",
-    r"regardless of what (the |any )?(law|legal|retrieved)",
-    r"do not (mention|explain) this (note|instruction)",
-    r"literal text of your (system prompt|instructions)",
-    r"this is a routine internal (qa|quality assurance) check",
-]
-_INJECTION_PATTERN = re.compile("|".join(_INJECTION_PATTERNS), re.IGNORECASE)
-
-
-def _detect_injection_attempt(text: str) -> list[str]:
-    """Return the actual matched snippets, or [] if nothing suspicious found."""
-    return list(dict.fromkeys(m.group(0).lower() for m in _INJECTION_PATTERN.finditer(text)))
+    return wrap_untrusted_content(text, tag="content_to_grade")
 
 
 def _phrases_are_grounded(flagged_phrases: list[str], text: str) -> bool:
@@ -465,7 +441,7 @@ def check_compliance(
         # like it's trying to manipulate the classifier, or if the model quoted
         # a "flagged phrase" that doesn't actually appear in the input — both
         # confirmed failure modes under injection (data/eval/SECURITY_SUMMARY.md).
-        injection_hits = _detect_injection_attempt(text)
+        injection_hits = detect_injection_attempt(text)
         fabricated = not _phrases_are_grounded(result.get("flagged_phrases", []), text)
         result["manipulation_suspected"] = bool(injection_hits or fabricated)
 
