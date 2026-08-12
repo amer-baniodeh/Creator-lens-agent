@@ -346,6 +346,52 @@ the hallucination investigation was handled earlier — confirm the issue is rea
 before deciding whether and how to harden it. No production code changed as a result
 of this entry; `check_compliance()` and the agent behave exactly as before.
 
+## 16. Hardening check_compliance() against the confirmed injection, and verifying it actually worked
+
+Followed up entry 15's confirmed vulnerability with a fix, scoped to `check_compliance()`
+specifically (the highest-severity finding — the agent-level indirect-injection gap
+from entry 15 is a separate attack surface and stays open). Three layered defenses,
+none relied on alone:
+
+1. **Delimit untrusted content and say so explicitly.** The text being graded is now
+   wrapped in `<content_to_grade>` tags, with an explicit system-prompt rule that
+   anything inside is data to evaluate, never instructions to follow.
+2. **Detect known injection phrasing.** A pattern check against the raw input
+   (phrasing like "system override," "pre-approved exception," "respond with
+   verdict") — a match doesn't block anything, but it means the verdict can't be
+   trusted as-is.
+3. **Verify quoted evidence is real.** Every "flagged phrase" the classifier claims
+   to quote is checked against the actual input text. If it's not really there —
+   which is exactly what happened in the entry 15 fabrication case — the output is
+   untrustworthy regardless of cause.
+
+If either check trips, the verdict is forced to 2 (grey area — needs human review)
+and a `manipulation_suspected` flag is set, rather than silently trusting whatever
+the model returned.
+
+**Re-tested, not just re-read the code.** Re-ran both confirmed exploits from entry
+15 through the full pipeline:
+- The forced-compliant attack (real cure claim → previously verdict 0): now returns
+  verdict 2, `manipulation_suspected=True`, correctly identifies the actual violation
+  in its reasoning instead of being overridden.
+- The forced-violation-with-fabricated-quote attack (benign claim → previously
+  verdict 3 with a hallucinated quote): now returns verdict 2,
+  `manipulation_suspected=True`, and the flagged phrase is the real input text, not
+  a fabricated one.
+
+**Checked for regressions, not just the fix.** Re-ran the full compliance eval
+(both sets, gpt-4o-mini): main set 90.9% → 87.9% (one new miss, a borderline
+personal-experience claim — its notes show no manipulation flag, so this is
+ordinary prompt-sensitivity noise, not the new guard false-triggering), holdout set
+90.0% → 95.0% (improved). Zero false positives from the new injection-pattern check
+anywhere across 53 legitimate eval examples. Net effect: a small, expected wobble on
+borderline cases in exchange for closing a real vulnerability — an acceptable trade,
+not a regression worth chasing further.
+
+**Still open:** the agent-level indirect-injection gap from entry 15 (an embedded
+instruction successfully got the chat agent to falsely claim retrieved content
+"doesn't exist") — different code path, not addressed by this fix.
+
 ## Current state (updated as of the most recent entry above)
 
 - **Compliance checker:** grounded in real law, graded 4-level verdict (not binary) via
@@ -374,9 +420,11 @@ of this entry; `check_compliance()` and the agent behave exactly as before.
   half what was originally reported, and the two models are close to tied on severe
   misses (the error type that matters most for a compliance tool) once noise is
   controlled for.
-- **Security:** red-teamed for leakage and manipulation (entry 15). Direct chat-level
-  attacks are all refused. A confirmed prompt-injection vulnerability exists in the
-  compliance classifier — text embedded in the content being graded can flip a real
-  violation to "compliant" or vice versa, verified with clean controls. Documented,
-  not yet hardened — a candidate next step alongside the retrieval and cross-lingual
-  gaps above.
+- **Security:** red-teamed for leakage and manipulation (entry 15), then hardened
+  and re-verified (entry 16). Direct chat-level attacks are all refused.
+  `check_compliance()`'s injection vulnerability is fixed — delimited untrusted
+  content, an injection-pattern check, and a fabrication check now force a
+  suspicious verdict to "needs review" instead of trusting it, confirmed against
+  both original exploits with no meaningful accuracy regression. Still open: a
+  separate agent-level indirect-injection gap where an embedded instruction can get
+  the chat agent to misrepresent whether content was found.

@@ -123,8 +123,9 @@ outside 0-3 or omit a field; this replaced an earlier looser JSON-mode implement
 - **Layer 1 (fast):** regex match against a ~30-phrase forbidden-phrase blocklist — always verdict 3
 - **Layer 2 (RAG-grounded):** retrieves the actual relevant provisions from the `eu-regulations` Pinecone namespace (HWG, UWG §5a/§3a) and asks GPT to grade compliance using *only* that retrieved text, citing the specific sub-provision (e.g. `§11 Abs. 1 Nr. 9 HWG`). Prompt includes fresh few-shot exemplars, one per verdict level, kept separate from the eval sets.
 - Falls back to an ungrounded classifier only if the legal namespace is empty (self-heals via auto-ingestion on app startup)
-- Output: `verdict` (0-3), `verdict_label`, `compliant`/`needs_review` (derived booleans), `reason`, `notes`, cited section(s), flagged phrases, source layer
+- Output: `verdict` (0-3), `verdict_label`, `compliant`/`needs_review` (derived booleans), `reason`, `notes`, cited section(s), flagged phrases, source layer, `manipulation_suspected` (bool)
 - Model is overridable per-call (`model=` param) — used to run the same eval against alternative models without changing global config
+- **Anti-injection guard (layer 2 only):** the text being graded is untrusted third-party content, so it's delimited and the prompt explicitly instructs treating it as data, not instructions. A pattern check flags known injection phrasing, and a fabrication check verifies every quoted "flagged phrase" actually appears in the input. Either check tripping forces the verdict to 2 and sets `manipulation_suspected=True` instead of trusting the raw LLM output — added after a confirmed exploit, see `data/eval/SECURITY_SUMMARY.md`.
 
 ## Evaluation framework
 
@@ -157,10 +158,11 @@ professional-endorsement claim type; a cross-lingual RAG retrieval gap where a
 correct non-English chunk can be missed when surrounded by content in another
 language; retrieval quality measurably degrades as the video corpus grows
 (90%→60% hit rate observed after doubling from 5 to 11 videos) and hasn't yet
-been addressed beyond raising `TOP_K_RESULTS`; a confirmed prompt-injection
-vulnerability in `check_compliance` — text embedded in the content being graded can
-flip a real violation to "compliant" or vice versa (see `data/eval/SECURITY_SUMMARY.md`),
-not yet hardened.
+been addressed beyond raising `TOP_K_RESULTS`; a separate, still-open indirect
+prompt-injection gap at the agent/chat level, where an instruction embedded in a
+retrieved video transcript can get the agent to misrepresent whether content was
+found (see `data/eval/SECURITY_SUMMARY.md`). The `check_compliance` injection
+vulnerability found alongside it has been fixed — see the tool description below.
 
 ## Notebooks
 
