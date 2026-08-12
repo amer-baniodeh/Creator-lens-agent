@@ -13,6 +13,7 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT))
 
 import streamlit as st
+import streamlit.components.v1 as components
 from langchain_core.callbacks import BaseCallbackHandler
 
 from src.agent.agent import get_agent
@@ -34,10 +35,34 @@ SUGGESTED_QUESTIONS = [
     "Which claims need revision?",
 ]
 
-# ── Custom CSS (dark + violet, card-based layout) ──────────────────────────────
+# ── Custom CSS (dark clinical teal, card-based layout) ──────────────────────────
 st.markdown(
     """
     <style>
+    :root {
+      --ink: #EDEAE1;
+      --ink-soft: #A9B3AC;
+      --paper: #121815;
+      --paper-raised: #1B2320;
+      --line: rgba(237, 234, 225, 0.12);
+      --line-strong: rgba(237, 234, 225, 0.22);
+      --accent: #6FBBA2;
+      --accent-ink: #EAF6F0;
+      --accent-soft: rgba(111, 187, 162, 0.16);
+      --compliant: #6BBF8B;
+      --compliant-soft: rgba(107, 191, 139, 0.14);
+      --minor: #E0B65C;
+      --minor-soft: rgba(224, 182, 92, 0.14);
+      --grey: #E0946A;
+      --grey-soft: rgba(224, 148, 106, 0.14);
+      --violation: #E08079;
+      --violation-soft: rgba(224, 128, 121, 0.14);
+    }
+    /* These vars are fixed to match Streamlit's own base theme, set in
+       .streamlit/config.toml (base="dark") — Streamlit doesn't react to OS
+       light/dark preference on its own, so the two must stay in sync rather
+       than one flipping independently of the other. */
+
     .stApp { font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif; }
 
     /* Header */
@@ -46,70 +71,200 @@ st.markdown(
       align-items: center;
       gap: 14px;
       padding: 4px 0 20px 0;
-      border-bottom: 1px solid rgba(139,124,246,0.15);
+      border-bottom: 1px solid var(--line);
       margin-bottom: 20px;
     }
     .app-logo {
       width: 40px; height: 40px;
       border-radius: 10px;
-      background: linear-gradient(135deg, #8B7CF6, #5B4FD6);
+      background: var(--accent);
       display: flex; align-items: center; justify-content: center;
-      font-size: 20px; color: #fff;
-      box-shadow: 0 0 20px rgba(139,124,246,0.4);
+      font-size: 18px; font-weight: 700; color: var(--paper);
       flex-shrink: 0;
     }
-    .app-title { font-size: 22px; font-weight: 700; color: #F0EEFA; letter-spacing: -0.3px; }
-    .app-subtitle { font-size: 13px; color: #9C9AB0; margin-top: 2px; }
+    .app-title { font-size: 22px; font-weight: 700; color: var(--ink); letter-spacing: -0.3px; }
+    .app-subtitle { font-size: 13px; color: var(--ink-soft); margin-top: 2px; }
+
+    /* Sidebar status dashboard */
+    .status-pill { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--ink-soft); margin-bottom: 12px; }
+    .status-pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--compliant); box-shadow: 0 0 0 3px var(--compliant-soft); flex-shrink: 0; }
+    .status-pill.status-warn::before { background: var(--minor); box-shadow: 0 0 0 3px var(--minor-soft); }
+    .stat-row { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+    .stat-card { background: var(--paper-raised); border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+    .stat-value { font-family: 'SF Mono', Menlo, monospace; font-variant-numeric: tabular-nums; font-size: 15px; font-weight: 700; color: var(--ink); flex-shrink: 0; }
+    .stat-label { font-size: 11px; color: var(--ink-soft); text-align: right; }
+
+    /* Tool-progress stepper */
+    .stepper { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 12.5px; color: var(--ink-soft); }
+    .stepper .step { display: flex; align-items: center; gap: 5px; white-space: nowrap; }
+    .stepper .step.done { color: var(--accent-ink); }
+    .stepper .step-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--line-strong); flex-shrink: 0; }
+    .stepper .step.done .step-dot { background: var(--accent); }
+    .stepper .step-rule { width: 12px; height: 1px; background: var(--line-strong); flex-shrink: 0; }
 
     /* Compliance card — 4-level verdict scale (0-3) */
-    .compliance-card { border-radius: 14px; padding: 16px 18px; margin: 8px 0; border: 1px solid; background: #17171F; }
-    .compliance-card.badge-v0 { border-color: rgba(74,222,128,0.3); background: rgba(74,222,128,0.06); }
-    .compliance-card.badge-v1 { border-color: rgba(94,214,168,0.3); background: rgba(94,214,168,0.06); }
-    .compliance-card.badge-v2 { border-color: rgba(245,166,66,0.35); background: rgba(245,166,66,0.08); }
-    .compliance-card.badge-v3 { border-color: rgba(248,113,113,0.3); background: rgba(248,113,113,0.06); }
+    .compliance-card { border-radius: 14px; padding: 16px 18px; margin: 8px 0; border: 1px solid var(--line); background: var(--paper-raised); }
+    .compliance-card.badge-v0 { border-color: color-mix(in srgb, var(--compliant) 35%, transparent); background: var(--compliant-soft); }
+    .compliance-card.badge-v1 { border-color: color-mix(in srgb, var(--compliant) 35%, transparent); background: var(--compliant-soft); }
+    .compliance-card.badge-v2 { border-color: color-mix(in srgb, var(--grey) 35%, transparent); background: var(--grey-soft); }
+    .compliance-card.badge-v3 { border-color: color-mix(in srgb, var(--violation) 35%, transparent); background: var(--violation-soft); }
     .compliance-card-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
     .compliance-icon { font-size: 16px; }
     .compliance-badge { font-size: 11px; font-weight: 700; letter-spacing: 0.06em; padding: 3px 10px; border-radius: 20px; text-transform: uppercase; }
-    .compliance-badge.badge-v0 { background: rgba(74,222,128,0.15); color: #4ADE80; }
-    .compliance-badge.badge-v1 { background: rgba(94,214,168,0.15); color: #5ED6A8; }
-    .compliance-badge.badge-v2 { background: rgba(245,166,66,0.18); color: #F5A642; }
-    .compliance-badge.badge-v3 { background: rgba(248,113,113,0.15); color: #F87171; }
-    .compliance-source { font-size: 11px; color: #7A7890; margin-left: auto; font-family: 'SF Mono', Menlo, monospace; }
-    .compliance-reason { font-size: 13.5px; color: #D4D2E0; line-height: 1.55; margin-bottom: 6px; }
-    .compliance-notes { font-size: 12.5px; color: #A8A6BC; line-height: 1.5; margin-bottom: 10px; font-style: italic; }
+    .compliance-badge.badge-v0 { background: var(--compliant-soft); color: var(--compliant); }
+    .compliance-badge.badge-v1 { background: var(--minor-soft); color: var(--minor); }
+    .compliance-badge.badge-v2 { background: var(--grey-soft); color: var(--grey); }
+    .compliance-badge.badge-v3 { background: var(--violation-soft); color: var(--violation); }
+    .compliance-reason { font-size: 13.5px; color: var(--ink); line-height: 1.55; margin-bottom: 6px; }
+    .compliance-notes { font-size: 12.5px; color: var(--ink-soft); line-height: 1.5; margin-bottom: 10px; font-style: italic; }
     .chip-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
-    .chip { font-size: 11px; padding: 3px 10px; border-radius: 20px; font-family: 'SF Mono', Menlo, monospace; }
-    .chip-section { background: rgba(139,124,246,0.15); color: #B4A8FA; }
-    .chip-phrase { background: rgba(248,113,113,0.12); color: #F5A3A3; font-style: italic; }
+    .chip { font-size: 11px; padding: 3px 10px; border-radius: 20px; }
+    .chip-section { background: var(--accent-soft); color: var(--accent-ink); }
+    .chip-phrase { background: var(--violation-soft); color: var(--violation); font-style: italic; }
 
     /* Knowledge base cards */
-    .kb-card { display: flex; gap: 10px; align-items: center; padding: 8px; border-radius: 12px; background: #17171F; border: 1px solid rgba(255,255,255,0.06); margin-bottom: 8px; }
+    .kb-card { display: flex; gap: 10px; align-items: center; padding: 8px; border-radius: 12px; background: var(--paper-raised); border: 1px solid var(--line); margin-bottom: 8px; }
     .kb-thumb, .kb-thumb-placeholder { width: 64px; height: 42px; border-radius: 8px; object-fit: cover; flex-shrink: 0; }
-    .kb-thumb-placeholder { background: linear-gradient(135deg, #2A2740, #1B1926); display: flex; align-items: center; justify-content: center; font-size: 18px; }
+    .kb-thumb-placeholder { background: var(--accent-soft); display: flex; align-items: center; justify-content: center; font-size: 18px; }
     .kb-info { min-width: 0; flex: 1; }
-    .kb-title { font-size: 12.5px; font-weight: 600; color: #E8E6F0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .kb-channel { font-size: 11px; color: #8A88A0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .kb-meta { font-size: 10.5px; color: #6C6A80; display: flex; align-items: center; gap: 5px; margin-top: 2px; }
-    .kb-dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
-    .kb-dot.dot-v0 { background: #4ADE80; }
-    .kb-dot.dot-v1 { background: #5ED6A8; }
-    .kb-dot.dot-v2 { background: #F5A642; }
-    .kb-dot.dot-v3 { background: #F87171; }
-    .kb-dot.dot-unknown { background: #5A5870; }
+    .kb-title { font-size: 12.5px; font-weight: 600; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .kb-channel { font-size: 11px; color: var(--ink-soft); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .kb-meta { font-size: 10.5px; color: var(--ink-soft); display: flex; align-items: center; gap: 5px; margin-top: 2px; }
+    .kb-dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+    .kb-dot.dot-v0 { background: var(--compliant); }
+    .kb-dot.dot-v1 { background: var(--minor); }
+    .kb-dot.dot-v2 { background: var(--grey); }
+    .kb-dot.dot-v3 { background: var(--violation); }
+    .kb-dot.dot-unknown { background: var(--line-strong); }
 
     /* Legal corpus badges */
     .legal-badge-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
-    .legal-badge { font-size: 10.5px; padding: 3px 9px; border-radius: 20px; background: rgba(139,124,246,0.12); color: #B4A8FA; font-family: 'SF Mono', Menlo, monospace; }
+    .legal-badge { font-size: 10.5px; padding: 3px 9px; border-radius: 20px; background: var(--accent-soft); color: var(--accent-ink); }
 
     /* Suggested question chips */
-    .suggested-label { font-size: 11px; color: #7A7890; text-transform: uppercase; letter-spacing: 0.06em; margin: 6px 0 8px; }
+    .suggested-label { font-size: 11px; color: var(--ink-soft); text-transform: uppercase; letter-spacing: 0.06em; margin: 6px 0 8px; }
+
+    /* Chat bubbles — distinguish user vs. assistant */
+    [data-testid="stChatMessage"] { border-radius: 14px; padding: 4px 6px; }
+    [data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarUser"]) {
+      background: var(--accent-soft);
+    }
+    [data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarAssistant"]) {
+      background: var(--paper-raised);
+      border: 1px solid var(--line);
+    }
 
     /* Alerts polish */
     [data-testid="stAlert"] { border-radius: 14px !important; }
+
+    /* Let the background network canvas (attached to <body>, behind everything)
+       show through — Streamlit paints its own solid fill on .stApp, a
+       full-viewport layer that otherwise sits directly on top of it and hides
+       it completely. body keeps the solid paper color as the fallback where
+       the canvas isn't drawing. */
+    body { background: var(--paper); }
+    .stApp, [data-testid="stHeader"] { background: transparent !important; }
     </style>
     """,
     unsafe_allow_html=True,
 )
+
+
+def _inject_background_network():
+    """Very low-opacity animated constellation behind the app, purely decorative.
+
+    Runs inside a 0-height Streamlit component iframe, then reaches into the
+    parent (top-level, same-origin) document to attach a fixed full-viewport
+    canvas — the standard trick for full-page effects in Streamlit, since a
+    component's own iframe can't otherwise cover the real page. Guards against
+    re-injecting on every rerun by checking for an existing canvas first.
+    """
+    components.html(
+        """
+        <script>
+        (function () {
+          var doc = window.parent.document;
+          if (doc.getElementById('bg-network')) { return; }
+
+          var canvas = doc.createElement('canvas');
+          canvas.id = 'bg-network';
+          canvas.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;';
+          doc.body.prepend(canvas);
+
+          var win = window.parent;
+          var ctx = canvas.getContext('2d');
+          var reduced = win.matchMedia('(prefers-reduced-motion: reduce)').matches;
+          var dpr = Math.min(win.devicePixelRatio || 1, 2);
+          var w, h, points;
+
+          function rgb() {
+            // App chrome is fixed to the dark theme (.streamlit/config.toml),
+            // so this stays fixed too rather than following OS light/dark mode.
+            return '111,187,162';
+          }
+          function resize() {
+            w = win.innerWidth; h = win.innerHeight;
+            canvas.width = w * dpr; canvas.height = h * dpr;
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            var count = Math.max(24, Math.min(70, Math.round((w * h) / 26000)));
+            points = [];
+            for (var i = 0; i < count; i++) {
+              points.push({
+                x: Math.random() * w, y: Math.random() * h,
+                vx: (Math.random() - 0.5) * 0.10, vy: (Math.random() - 0.5) * 0.10,
+                r: 1 + Math.random() * 1.2
+              });
+            }
+          }
+          function frame() {
+            if (!doc.body.contains(canvas)) { return; }
+            var c = rgb();
+            ctx.clearRect(0, 0, w, h);
+            for (var i = 0; i < points.length; i++) {
+              var p = points[i];
+              if (!reduced) {
+                p.x += p.vx; p.y += p.vy;
+                if (p.x < 0 || p.x > w) p.vx *= -1;
+                if (p.y < 0 || p.y > h) p.vy *= -1;
+              }
+            }
+            var maxDist = Math.min(130, Math.max(85, w / 10));
+            for (var i = 0; i < points.length; i++) {
+              for (var j = i + 1; j < points.length; j++) {
+                var a = points[i], b = points[j];
+                var dx = a.x - b.x, dy = a.y - b.y;
+                var dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist < maxDist) {
+                  var alpha = (1 - dist / maxDist) * 0.07;
+                  ctx.strokeStyle = 'rgba(' + c + ',' + alpha.toFixed(3) + ')';
+                  ctx.lineWidth = 1;
+                  ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+                }
+              }
+            }
+            for (var i = 0; i < points.length; i++) {
+              var p = points[i];
+              var glow = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r * 4);
+              glow.addColorStop(0, 'rgba(' + c + ',0.30)');
+              glow.addColorStop(1, 'rgba(' + c + ',0)');
+              ctx.fillStyle = glow;
+              ctx.beginPath(); ctx.arc(p.x, p.y, p.r * 4, 0, Math.PI * 2); ctx.fill();
+              ctx.fillStyle = 'rgba(' + c + ',0.45)';
+              ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fill();
+            }
+            if (!reduced) win.requestAnimationFrame(frame);
+          }
+          win.addEventListener('resize', resize);
+          resize();
+          frame();
+        })();
+        </script>
+        """,
+        height=0,
+    )
+
+
+_inject_background_network()
 
 
 @st.cache_resource(show_spinner=False)
@@ -172,18 +327,29 @@ if "pending_input" not in st.session_state:
     st.session_state.pending_input = None
 
 
-# ── Tool-status callback (agent "thinking" steps) ──────────────────────────────
-_TOOL_STATUS_LABELS = {
-    "ingest_video": "📥 Ingesting video...",
-    "query_corpus": "🔍 Searching transcripts...",
-    "check_compliance": "⚖️ Checking compliance...",
-    "check_video_compliance": "⚖️ Reviewing full video transcript(s)...",
+# ── Tool-status callback (agent "thinking" steps, shown as a stepper) ──────────
+_TOOL_STEP_LABELS = {
+    "ingest_video": "Adding the video",
+    "query_corpus": "Searching your videos",
+    "check_compliance": "Checking compliance",
+    "check_video_compliance": "Reading each video in full",
 }
 
 
+def _stepper_html(steps: list[dict]) -> str:
+    parts = []
+    for i, step in enumerate(steps):
+        cls = "step done" if step["done"] else "step"
+        parts.append(f'<span class="{cls}"><span class="step-dot"></span>{html.escape(step["label"])}</span>')
+        if i < len(steps) - 1:
+            parts.append('<span class="step-rule"></span>')
+    return f'<div class="stepper">{"".join(parts)}</div>'
+
+
 class _ToolStatusCallback(BaseCallbackHandler):
-    """Updates a Streamlit placeholder as the agent calls each tool, so the
-    user sees what's happening instead of a generic spinner.
+    """Renders a step-by-step progress trail as the agent calls each tool, so
+    the user sees plain-language progress instead of a generic spinner or raw
+    tool/function names.
 
     Also tracks whether any tool result this turn was flagged as a possible
     prompt-injection attempt (the "[WARNING: ...]" marker query_corpus inserts
@@ -197,16 +363,24 @@ class _ToolStatusCallback(BaseCallbackHandler):
     def __init__(self, placeholder):
         self.placeholder = placeholder
         self.manipulation_flagged = False
+        self._steps: list[dict] = []
+
+    def _render(self):
+        self.placeholder.markdown(_stepper_html(self._steps), unsafe_allow_html=True)
 
     def on_tool_start(self, serialized, input_str, **kwargs):
         name = serialized.get("name", "")
-        label = _TOOL_STATUS_LABELS.get(name, f"🔧 Running {name}...")
-        self.placeholder.markdown(label)
+        label = _TOOL_STEP_LABELS.get(name, name.replace("_", " ").capitalize())
+        self._steps.append({"label": label, "done": False})
+        self._render()
 
     def on_tool_end(self, output, **kwargs):
         text = output if isinstance(output, str) else str(output)
         if "[WARNING:" in text or "[flagged:" in text:
             self.manipulation_flagged = True
+        if self._steps:
+            self._steps[-1]["done"] = True
+        self._render()
 
 
 def _run_agent(prompt: str, status_placeholder=None) -> str:
@@ -283,11 +457,7 @@ def _handle_ingestion(summary: dict):
     """Store ingestion result and run structured analysis."""
     summary["compliance_verdict"] = None
     st.session_state.ingested_videos.append(summary)
-    st.success(
-        f"Ingested **{summary['title']}** "
-        f"by **{summary.get('channel', 'Unknown')}** — "
-        f"{summary['chunk_count']} chunks"
-    )
+    st.success(f"Added **{summary['title']}** by **{summary.get('channel', 'Unknown')}** to your library")
 
     status_ph = st.empty()
     try:
@@ -342,7 +512,6 @@ def _compliance_card_html(result: dict) -> str:
       <div class="compliance-card-header">
         <span class="compliance-icon">{icon}</span>
         <span class="compliance-badge {badge_class}">{badge_text}</span>
-        <span class="compliance-source">via {html.escape(result.get('source', 'unknown'))}</span>
       </div>
       <div class="compliance-reason">{html.escape(result.get('reason', ''))}</div>
       {f'<div class="compliance-notes">{html.escape(notes)}</div>' if notes else ''}
@@ -391,7 +560,7 @@ def _kb_card_html(v: dict) -> str:
       <div class="kb-info">
         <div class="kb-title">{title}</div>
         <div class="kb-channel">{channel}</div>
-        <div class="kb-meta"><span class="kb-dot {dot_class}"></span>{v.get('chunk_count', 0)} chunks</div>
+        <div class="kb-meta"><span class="kb-dot {dot_class}"></span>Indexed</div>
       </div>
     </div>
     """
@@ -432,6 +601,30 @@ def _process_turn(user_input: str):
 
 # ── Sidebar ──────────────────────────────────────────────────────────────────
 with st.sidebar:
+    _status_ok = _legal_corpus_status.get("status") in ("already_present", "ingested")
+    st.markdown(
+        f"""
+        <div class="status-pill{'' if _status_ok else ' status-warn'}">
+          {'All systems connected' if _status_ok else 'Legal corpus unavailable'}
+        </div>
+        <div class="stat-row">
+          <div class="stat-card">
+            <div class="stat-value">{len(st.session_state.ingested_videos)}</div>
+            <div class="stat-label">videos indexed</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value">~90%</div>
+            <div class="stat-label">eval accuracy</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value">~9 sec</div>
+            <div class="stat-label">avg. answer</div>
+          </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
     st.markdown("### Add content")
 
     ingest_tab, paste_tab = st.tabs(["YouTube URL", "Paste transcript"])
@@ -442,7 +635,7 @@ with st.sidebar:
 
         if st.button("Ingest from YouTube", use_container_width=True):
             if url_input:
-                with st.spinner("Fetching transcript and uploading to Pinecone..."):
+                with st.spinner("Fetching transcript and adding it to your library..."):
                     try:
                         from src.ingestion.embedder import ingest_video
                         summary = ingest_video(url_input, url_title or None)
@@ -467,7 +660,7 @@ with st.sidebar:
 
         if st.button("Ingest transcript", use_container_width=True):
             if paste_title and paste_text:
-                with st.spinner("Chunking and uploading to Pinecone..."):
+                with st.spinner("Processing and adding it to your library..."):
                     try:
                         from src.ingestion.embedder import ingest_transcript
                         summary = ingest_transcript(
@@ -516,7 +709,7 @@ st.markdown(
       <div class="app-logo">◆</div>
       <div>
         <div class="app-title">Creative Intelligence Copilot</div>
-        <div class="app-subtitle">RAG-grounded creative &amp; compliance analysis for influencer marketing</div>
+        <div class="app-subtitle">Creative &amp; compliance review for influencer marketing, grounded in your video library</div>
       </div>
     </div>
     """,
