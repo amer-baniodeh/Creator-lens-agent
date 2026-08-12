@@ -554,6 +554,35 @@ question and answer now appear as consecutive bubbles in the natural conversatio
 flow, with the tool-status indicator ("⚖️ Reviewing full video transcript(s)...")
 showing near the top while processing rather than in an awkward spot.
 
+## 21. MVP complete — scoping (not building) a path off the ngrok workaround
+
+With the app in a state ready to present to stakeholders, scoped a future
+improvement rather than building it now: removing the ngrok dependency so the app
+can be hosted directly on Streamlit Cloud with live YouTube ingestion, no laptop
+required.
+
+**Key finding, before any solution design:** the two ideas that prompted this
+("use the real YouTube API" / "download the video and transcribe with Whisper")
+don't actually fix the underlying problem. YouTube blocks requests by *IP range*,
+not by which endpoint is called — downloading a full video from a cloud IP hits
+the identical block as fetching captions does, and is if anything a heavier,
+more bot-like request less likely to succeed. Transcript quality/source and the
+network-level block are two separate problems that look related but aren't.
+
+**What would actually fix the hosting problem:** routing the request through a
+non-cloud IP — a residential/rotating proxy in front of the existing fetcher
+(cheapest, most direct), a browser-side fetch via a custom Streamlit component
+using the visitor's own IP (zero marginal cost, more novel/untested), or a
+third-party "transcript for this URL" API that already solved it server-side
+(least engineering effort, new vendor dependency).
+
+**Decision:** not worth the engineering time right now given the timeline. Scoped
+as a future roadmap item (see `docs/architecture.md`, Phase 2) with the plan
+already laid out — validate the actual cloud failure mode first, test a proxy
+fix in isolation, test Whisper quality in isolation (separately, so the two
+aren't conflated the way the original framing did), only combine them if the
+Whisper quality test justifies the added cost and latency.
+
 ## Current state (updated as of the most recent entry above)
 
 - **Compliance checker:** grounded in real law, graded 4-level verdict (not binary) via

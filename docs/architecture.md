@@ -199,7 +199,18 @@ below.
 
 ## Phase 2 additions (post-MVP)
 
-- Whisper transcription for videos without auto-captions
+- **Remove the ngrok dependency for live YouTube ingestion** — researched, not yet
+  built (see `docs/PROJECT_LOG.md` entry 21). YouTube blocks by IP range, not by
+  which endpoint is called, so switching to downloading video + Whisper transcription
+  would NOT by itself fix cloud-hosted ingestion — that requires routing the request
+  through a non-cloud IP. Options, cheapest/most direct first: a residential/rotating
+  proxy in front of the existing fetcher; a browser-side fetch via a custom Streamlit
+  component using the visitor's own IP; a third-party "transcript for this URL" API.
+  Plan: validate the actual cloud failure mode, test a proxy fix in isolation, test
+  Whisper transcript quality in isolation (separately, so the two aren't conflated),
+  only combine if the quality test justifies the added cost/latency.
+- Whisper transcription for videos without auto-captions (quality question,
+  independent of the hosting question above)
 - Fix the known cross-lingual retrieval gap (query translation, or multilingual-aware chunking/retrieval)
 - Retrieval quality improvements for a larger corpus (reranking, hybrid search, or per-video metadata filtering) — evidenced as necessary, not just anticipated
 - Brief generator tool (structured output → creator brief draft)
