@@ -491,6 +491,48 @@ more reliable than asking the model to police itself, and should be the default
 approach anywhere in this app that surfaces LLM output built from untrusted
 third-party content.
 
+## 19. Fixing the bug that started it all: broad compliance questions in chat
+
+Back to the original report that kicked off entry 18's detour: clicking the
+"Which claims need revision?" suggested question gave a wrong, unhelpful answer —
+even for a completely legitimate video, no manipulation involved.
+
+**Root cause, confirmed by direct testing, not assumed:** `query_corpus` answers
+questions by semantic similarity search. A meta-question like "which claims need
+revision" doesn't semantically resemble real transcript content (people don't say
+"this needs revision" in a skincare video), so the search returned weak,
+often-irrelevant matches — in one test, a completely unrelated "6 Steps of the
+Purchasing Process" video outscored the actual skincare content. The agent then
+correctly (given what it saw) reported nothing useful found — even though the
+ingestion-time compliance card, a separate code path that reads the FULL
+transcript rather than similarity-searching, already had the real answer on
+screen.
+
+**Fix:** added a fourth agent tool, `check_video_compliance` (`src/agent/tools.py`),
+which sidesteps similarity search entirely — it looks up matching video(s) by
+title/URL (or "all"), pulls each one's full transcript via the existing
+`get_video_transcript`, and runs `check_compliance` directly. Same reliable path
+the ingestion-time card already uses, now available in chat. Added a
+`list_ingested_videos()` helper to `embedder.py` to support "all videos" queries.
+Updated the agent's system prompt to route broad compliance questions here instead
+of `query_corpus`, reserving `query_corpus` for questions about one specific quote
+or detail.
+
+Reused the existing security guards rather than introducing a new gap: video
+titles are scanned for injection patterns before display (same as `query_corpus`),
+and the transcript itself goes through `check_compliance`'s already-hardened path
+(delimiting, injection detection, fabrication check from entry 16).
+
+**Verified against the exact original bug report:** asking "which claims need
+revision" now correctly surfaces the real flagged phrases across every ingested
+video, matching what the compliance card already showed. Also re-tested against
+the round-6 exploit video specifically — the tool correctly flags its manipulated
+title while still returning an accurate, unaffected compliance verdict on the
+actual transcript content (which has nothing to do with the injected title).
+
+Full security regression (18 cases) and the test suite both pass clean after this
+change.
+
 ## Current state (updated as of the most recent entry above)
 
 - **Compliance checker:** grounded in real law, graded 4-level verdict (not binary) via
@@ -530,3 +572,8 @@ third-party content.
   evidence for a fabricated claim. Fixed with a deterministic backstop: the UI now
   flags any answer built from suspicious content regardless of what the model's
   own text says, rather than trusting the model to police itself.
+- **Agent tools:** four now, not three — added `check_video_compliance` (entry 19)
+  for broad compliance-review questions ("which claims need revision," "summarize
+  compliance issues across all videos"), which checks full transcripts directly
+  instead of relying on `query_corpus`'s similarity search, which performs poorly
+  on abstract meta-questions that don't resemble real transcript content.

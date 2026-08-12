@@ -174,6 +174,7 @@ _TOOL_STATUS_LABELS = {
     "ingest_video": "📥 Ingesting video...",
     "query_corpus": "🔍 Searching transcripts...",
     "check_compliance": "⚖️ Checking compliance...",
+    "check_video_compliance": "⚖️ Reviewing full video transcript(s)...",
 }
 
 

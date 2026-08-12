@@ -138,6 +138,45 @@ def get_video_transcript(video_id: str, max_chunks: int = 200) -> str:
     return " ".join(m["metadata"].get("text", "") for m in matches)
 
 
+def list_ingested_videos(namespace: str = "") -> list[dict]:
+    """
+    Return one entry per distinct video in the given namespace:
+    {video_id, title, channel, url}. Used by tools/UI that need to enumerate the
+    corpus (e.g. "check compliance across all videos") rather than search it.
+
+    Approximate, not exhaustive: samples up to the full vector count via one
+    query rather than paging through everything, so an extremely uneven chunk
+    distribution could in theory miss a video with very few chunks. Fine for
+    "list what's roughly in the knowledge base"; not a source of truth for
+    exact corpus size.
+    """
+    index = _get_pinecone_index()
+    stats = index.describe_index_stats()
+    total = stats.get("namespaces", {}).get(namespace, {}).get("vector_count", 0)
+    if total == 0:
+        return []
+
+    probe_vector = embed_texts([" "])[0]
+    result = index.query(
+        vector=probe_vector,
+        namespace=namespace,
+        top_k=min(total, 1000),
+        include_metadata=True,
+    )
+    seen: dict[str, dict] = {}
+    for m in result.get("matches", []):
+        md = m["metadata"]
+        vid = md.get("video_id")
+        if vid and vid not in seen:
+            seen[vid] = {
+                "video_id": vid,
+                "title": md.get("title", "Unknown"),
+                "channel": md.get("channel", "Unknown"),
+                "url": md.get("url", ""),
+            }
+    return list(seen.values())
+
+
 def ingest_transcript(text: str, title: str, channel: str = "Unknown", url: str = "") -> dict:
     """
     Ingest a raw transcript string (no YouTube API call).

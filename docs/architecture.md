@@ -138,6 +138,17 @@ outside 0-3 or omit a field; this replaced an earlier looser JSON-mode implement
 - Model is overridable per-call (`model=` param) — used to run the same eval against alternative models without changing global config
 - **Anti-injection guard (layer 2 only):** the text being graded is untrusted third-party content, so it's delimited and the prompt explicitly instructs treating it as data, not instructions. A pattern check flags known injection phrasing, and a fabrication check verifies every quoted "flagged phrase" actually appears in the input. Either check tripping forces the verdict to 2 and sets `manipulation_suspected=True` instead of trusting the raw LLM output — added after a confirmed exploit, see `data/eval/SECURITY_SUMMARY.md`.
 
+### `check_video_compliance`
+Broad compliance review of one or all ingested videos — the answer to "which
+claims need revision?" or "summarize compliance issues across all videos," which
+`query_corpus` handles poorly (similarity search on an abstract meta-question
+doesn't reliably surface real content).
+
+- Input: a video title (or part of one), a URL, or `all`
+- Pipeline: `list_ingested_videos()` (enumerates the corpus via one Pinecone query, not a per-video lookup) → matches by title/URL substring → `get_video_transcript()` for each match's FULL transcript → `check_compliance()` on each, same hardened path as the `check_compliance` tool
+- Video titles are scanned for injection patterns before display (same guard as `query_corpus`) — a manipulated title doesn't affect the actual verdict, since only the transcript is graded, but it's flagged in the output regardless
+- Capped at 8 videos per call to keep tool output bounded
+
 ## Evaluation framework
 
 Every quality claim about this system is backed by a saved, re-runnable eval —
