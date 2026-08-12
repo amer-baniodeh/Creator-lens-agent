@@ -533,6 +533,27 @@ actual transcript content (which has nothing to do with the injected title).
 Full security regression (18 cases) and the test suite both pass clean after this
 change.
 
+## 20. Suggested-question answers weren't reading as part of the conversation
+
+Separate from entry 19's answer-quality fix: even after getting the right answer,
+clicking a suggested question made it appear stacked below the chip row instead of
+flowing naturally into the conversation above it.
+
+**Root cause:** a Streamlit script-ordering artifact, not CSS. The page rendered
+chat history, then the suggested chips, then — only after a chip's button click
+was detected — processed and drew the new turn right there in the script, i.e.
+below the chips, since the history loop above it had already run before the new
+messages existed.
+
+**Fix:** on a chip click (or typed message), the turn is no longer processed and
+drawn inline. Instead it's stashed in session state and an immediate rerun is
+triggered; on that rerun, the pending turn is resolved *before* the chat-history
+loop runs, so it's simply part of the same unified top-to-bottom render as
+everything else. Verified live in the browser, not just read from the diff — the
+question and answer now appear as consecutive bubbles in the natural conversation
+flow, with the tool-status indicator ("⚖️ Reviewing full video transcript(s)...")
+showing near the top while processing rather than in an awkward spot.
+
 ## Current state (updated as of the most recent entry above)
 
 - **Compliance checker:** grounded in real law, graded 4-level verdict (not binary) via

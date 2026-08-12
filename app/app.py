@@ -168,6 +168,9 @@ if "messages" not in st.session_state:
 if "ingested_videos" not in st.session_state:
     st.session_state.ingested_videos = []
 
+if "pending_input" not in st.session_state:
+    st.session_state.pending_input = None
+
 
 # ── Tool-status callback (agent "thinking" steps) ──────────────────────────────
 _TOOL_STATUS_LABELS = {
@@ -394,34 +397,35 @@ def _kb_card_html(v: dict) -> str:
     """
 
 
-def _handle_user_turn(user_input: str):
-    """Shared logic for both the chat input box and suggested-question chips."""
+def _process_turn(user_input: str):
+    """Shared logic for both the chat input box and suggested-question chips.
+
+    Only mutates st.session_state.messages — deliberately does NOT render chat
+    bubbles itself. Both callers set st.session_state.pending_input and trigger
+    an immediate st.rerun() instead of calling this directly; on the rerun, this
+    runs BEFORE the chat-history loop, so the new turn is simply part of the
+    single unified render instead of appearing wherever this happened to execute
+    (previously: below the suggested-question chips, looking disconnected from
+    the conversation above it — a script-ordering artifact, not a CSS bug).
+    """
     st.session_state.messages.append({"role": "user", "type": "text", "content": user_input})
-    with st.chat_message("user", avatar=_AVATARS["user"]):
-        st.markdown(user_input)
 
-    with st.chat_message("assistant", avatar=_AVATARS["assistant"]):
-        status_ph = st.empty()
-        status_ph.markdown("🤔 Thinking...")
-        try:
-            answer = _run_agent(user_input, status_ph)
-        except Exception as e:
-            answer = f"Error: {e}"
-            logger.error(f"Agent error: {e}")
-        status_ph.empty()
+    status_ph = st.empty()
+    status_ph.markdown("🤔 Thinking...")
+    try:
+        answer = _run_agent(user_input, status_ph)
+    except Exception as e:
+        answer = f"Error: {e}"
+        logger.error(f"Agent error: {e}")
+    status_ph.empty()
 
-        msg_data = {"role": "assistant", "type": "text", "content": answer}
-        if "🚨" in answer or "Not compliant" in answer:
-            st.error(answer)
-            msg_data["compliance_display"] = "error"
-        elif "⚠️" in answer or "needs legal review" in answer or "Grey area" in answer:
-            st.warning(answer)
-            msg_data["compliance_display"] = "warning"
-        elif "✅" in answer or "Compliant" in answer:
-            st.success(answer)
-            msg_data["compliance_display"] = "success"
-        else:
-            st.markdown(answer)
+    msg_data = {"role": "assistant", "type": "text", "content": answer}
+    if "🚨" in answer or "Not compliant" in answer:
+        msg_data["compliance_display"] = "error"
+    elif "⚠️" in answer or "needs legal review" in answer or "Grey area" in answer:
+        msg_data["compliance_display"] = "warning"
+    elif "✅" in answer or "Compliant" in answer:
+        msg_data["compliance_display"] = "success"
 
     st.session_state.messages.append(msg_data)
 
@@ -519,6 +523,14 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
+# Process any pending turn (from a chip click or the chat input) BEFORE the
+# history loop, so it becomes part of the same unified render below instead of
+# appearing wherever it was triggered from.
+if st.session_state.pending_input:
+    pending = st.session_state.pending_input
+    st.session_state.pending_input = None
+    _process_turn(pending)
+
 # Chat history display
 _COMPLIANCE_DISPLAY_FN = {"error": st.error, "warning": st.warning, "success": st.success}
 
@@ -538,8 +550,10 @@ if st.session_state.ingested_videos:
     for col, question in zip(cols, SUGGESTED_QUESTIONS):
         with col:
             if st.button(question, use_container_width=True, key=f"chip_{question}"):
-                _handle_user_turn(question)
+                st.session_state.pending_input = question
+                st.rerun()
 
 # Chat input
 if user_input := st.chat_input("Ask a question about your content..."):
-    _handle_user_turn(user_input)
+    st.session_state.pending_input = user_input
+    st.rerun()
