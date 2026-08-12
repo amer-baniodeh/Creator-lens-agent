@@ -22,6 +22,8 @@ Verdict scale: 0=fully compliant, 1=compliant with a minor note, 2=grey area (ne
 | 2026-08-12 09:05 | gpt-4o-mini | Holdout | 20 | 95.0% | 95.0% | 5.0% | 0.100 | Post prompt-injection hardening (gpt-4o-mini) — anti-injection guard, delimited content, fabrication check added to check_compliance(). |
 | 2026-08-12 09:18 | gpt-4o-mini | Main | 33 | 87.9% | 87.9% | 12.1% | 0.242 | Post prompt-injection hardening (gpt-4o-mini) — anti-injection guard, delimited content, fabrication check added to check_compliance(). |
 | 2026-08-12 09:19 | gpt-4o-mini | Holdout | 20 | 90.0% | 95.0% | 5.0% | 0.150 | Post prompt-injection hardening (gpt-4o-mini) — anti-injection guard, delimited content, fabrication check added to check_compliance(). |
+| 2026-08-12 10:41 | gpt-4o-mini | Main | 33 | 87.9% | 87.9% | 12.1% | 0.242 | Post prompt-injection hardening (gpt-4o-mini) — anti-injection guard, delimited content, fabrication check added to check_compliance(). |
+| 2026-08-12 10:42 | gpt-4o-mini | Holdout | 20 | 90.0% | 95.0% | 5.0% | 0.150 | Post prompt-injection hardening (gpt-4o-mini) — anti-injection guard, delimited content, fabrication check added to check_compliance(). |
 
 ## Where the full detail lives
 

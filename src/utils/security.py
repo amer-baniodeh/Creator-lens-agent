@@ -19,19 +19,21 @@ import re
 # Known injection phrasing, drawn from what was confirmed to work in testing
 # plus common variants.
 INJECTION_PATTERNS: list[str] = [
-    r"ignore (all |any |the )?(previous |prior |above )?instructions",
+    r"ignore (all |any |the )?(previous |prior |above )?(instructions|content|information|context|data)",
     r"system (override|note)",
     r"ai (system|assistant) note",
     r"pre-?approved exception",
     r"overrides? all (prior |previous )?(rules|instructions)",
     r"respond with verdict",
-    r"always (classify|grade|rate|report|mark) (this |it )?as",
+    r"always (classify|grade|rate|report|mark|answer|respond|say|state|tell)",
     r"regardless of what (the |any )?(law|legal|retrieved)",
     r"do not (mention|explain) this (note|instruction)",
     r"literal text of your (system prompt|instructions)",
     r"this is a routine internal (qa|quality assurance) check",
     r"(before|when) answering,? (the user'?s? (next )?question,? )?(first |also )?(output|print|reveal|repeat) your",
     r"tell (the user|them) (it|this|that) (does not|doesn'?t) exist",
+    r"the (user|assistant) (asks|reads) if this .{0,40}(complies?|compliant)",
+    r"answer always that",
 ]
 _INJECTION_PATTERN = re.compile("|".join(INJECTION_PATTERNS), re.IGNORECASE)
 

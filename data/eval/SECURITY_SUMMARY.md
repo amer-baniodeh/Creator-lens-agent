@@ -92,10 +92,35 @@ main set unchanged at 87.9%; holdout 95.0% → 90.0%, with the one new miss bein
 previously-documented professional-endorsement recall gap (no manipulation flag in
 its notes) — both sets sit within the range already observed this session.
 
+## A real exploit, and a harder lesson — 2026-08-12
+
+Found during unrelated debugging: a video already in the live knowledge base with
+its literal title as an injection payload (confirmed by the user as their own prior
+stress test, not an incident). Title/channel metadata had never been covered by the
+earlier fixes — only transcript content had. Extended delimiting + pattern
+detection to metadata across `query_corpus`, the chat sidebar's video list, and
+`analysis.py`. First attempt still failed: the exploit's exact phrasing didn't
+match the pattern list, so no warning fired. After broadening the patterns, the
+warning fired correctly — but **the agent still repeated the fabricated claim and
+cited the warning banner itself as supporting evidence**, proving a prompt-level
+caution note can't be relied on for free-text generation the way a forced
+structured verdict can.
+
+**Real fix:** a deterministic backstop, not another prompt tweak. The Streamlit UI
+now tracks whether any tool result in a turn was flagged, and prepends a hard
+caution banner to the displayed answer regardless of what the model itself says.
+Re-verified against the exact exploit — the banner fires reliably now, independent
+of model behavior. Full regression: zero canary hits, zero key leaks, all
+previously-fixed cases still fixed.
+
 ## Status
 
-All three originally-confirmed findings (compliance-classifier injection in two
-directions, agent-level indirect injection) are fixed and re-verified through the
-full pipeline. Direct chat-level attacks were already refused from the start —
-worth remembering that protection most likely comes from the base model's own
-safety training, not this app's own defenses.
+All confirmed findings — compliance-classifier injection (two directions),
+agent-level indirect injection, and metadata-based injection — are fixed and
+re-verified through the full pipeline. Direct chat-level attacks were refused from
+the start, most likely from the base model's own safety training rather than a
+defense this app added. The one durable lesson from this round: prompt-level
+defenses reduce injection success but should never be the last line of defense for
+anything generative — a deterministic flag-and-disclose backstop is more reliable
+than trusting the model to police itself, and is the pattern to reuse anywhere
+else in this app that surfaces LLM output built from untrusted content.

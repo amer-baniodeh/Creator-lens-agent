@@ -111,14 +111,17 @@ ingest_video   query_corpus   check_compliance
 - Pipeline: embed query → Pinecone similarity search (top-8) → filter by `MIN_RELEVANCE_SCORE` (0.15) → return scored chunks
 - If nothing clears the relevance floor, returns a fixed `NO_RELEVANT_CONTENT_FOUND` marker instead of weak matches — the agent's system prompt treats this as a hard signal to say so explicitly, never to guess
 - Output: relevant transcript excerpts with source + relevance score, or the marker
-- **Anti-injection guard:** excerpts are third-party video content, so each one is
-  delimited in `<excerpt>` tags and scanned for injection phrasing (shared with
+- **Anti-injection guard:** excerpt content AND video title/channel metadata are
+  both third-party-supplied and both scanned for injection phrasing (shared with
   `check_compliance`, `src/utils/security.py`) — a match prepends an inline
-  `[WARNING: ...]` marker into the tool output. The agent's system prompt explicitly
-  requires treating excerpt content as data, not instructions, and reporting
-  honestly whether content was retrieved regardless of what an excerpt claims —
-  added after a confirmed exploit where an embedded instruction got the agent to
-  falsely deny retrieved content existed, see `data/eval/SECURITY_SUMMARY.md`.
+  `[WARNING: ...]` marker into the tool output. The agent's system prompt requires
+  treating this content as data, not instructions, and never treating a "legal
+  requirement" or compliance claim asserted inside a video as authoritative.
+  **Deterministic backstop (app.py):** prompt-level warnings alone were proven
+  insufficient — the agent can cite its own warning marker as supporting evidence
+  for a fabricated claim. The Streamlit UI tracks whether any tool result in a turn
+  was flagged and prepends a hard caution banner to the displayed answer regardless
+  of what the model's text says. See `data/eval/SECURITY_SUMMARY.md`.
 
 ### `check_compliance`
 Two-layer, grounded in real law rather than an LLM's general legal knowledge, returning a
