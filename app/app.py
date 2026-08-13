@@ -22,7 +22,7 @@ from src.utils.security import detect_injection_attempt
 
 # ── Page config ───────────────────────────────────────────────────────────────
 st.set_page_config(
-    page_title="Creative Intelligence Copilot",
+    page_title="Better Call Compliance",
     page_icon="🎯",
     layout="wide",
 )
@@ -728,7 +728,7 @@ st.markdown(
     <div class="app-header">
       <div class="app-logo">◆</div>
       <div>
-        <div class="app-title">Creative Intelligence Copilot</div>
+        <div class="app-title">Better Call Compliance</div>
         <div class="app-subtitle">Creative &amp; compliance review for influencer marketing, grounded in your video library</div>
       </div>
     </div>
