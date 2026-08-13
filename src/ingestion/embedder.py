@@ -138,7 +138,7 @@ def get_video_transcript(video_id: str, max_chunks: int = 200) -> str:
     return " ".join(m["metadata"].get("text", "") for m in matches)
 
 
-def list_ingested_videos(namespace: str = "") -> list[dict]:
+def list_ingested_videos(namespace: str = "", video_ids: list[str] | None = None) -> list[dict]:
     """
     Return one entry per distinct video in the given namespace:
     {video_id, title, channel, url}. Used by tools/UI that need to enumerate the
@@ -149,7 +149,17 @@ def list_ingested_videos(namespace: str = "") -> list[dict]:
     distribution could in theory miss a video with very few chunks. Fine for
     "list what's roughly in the knowledge base"; not a source of truth for
     exact corpus size.
+
+    video_ids: when provided, restricts results to only these video IDs (e.g.
+    the current Streamlit session's own ingested videos) via a Pinecone metadata
+    filter — the corpus is shared across all sessions/users, so without this,
+    "all videos" means every video anyone has ever ingested, not just this
+    session's. An empty list means "scoped, but nothing ingested yet" and skips
+    the Pinecone call entirely — distinct from None, which means unscoped.
     """
+    if video_ids is not None and not video_ids:
+        return []
+
     index = _get_pinecone_index()
     stats = index.describe_index_stats()
     total = stats.get("namespaces", {}).get(namespace, {}).get("vector_count", 0)
@@ -157,11 +167,15 @@ def list_ingested_videos(namespace: str = "") -> list[dict]:
         return []
 
     probe_vector = embed_texts([" "])[0]
+    query_kwargs = {}
+    if video_ids is not None:
+        query_kwargs["filter"] = {"video_id": {"$in": video_ids}}
     result = index.query(
         vector=probe_vector,
         namespace=namespace,
         top_k=min(total, 1000),
         include_metadata=True,
+        **query_kwargs,
     )
     seen: dict[str, dict] = {}
     for m in result.get("matches", []):

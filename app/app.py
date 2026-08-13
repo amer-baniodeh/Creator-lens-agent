@@ -314,9 +314,6 @@ with st.spinner("Preparing legal knowledge base..."):
     _legal_corpus_status = _ensure_legal_corpus()
 
 # ── Session state init ────────────────────────────────────────────────────────
-if "agent" not in st.session_state:
-    st.session_state.agent = get_agent(verbose=False)
-
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
@@ -383,8 +380,31 @@ class _ToolStatusCallback(BaseCallbackHandler):
         self._render()
 
 
+def _ensure_scoped_agent():
+    """
+    (Re)build st.session_state.agent so its tools are scoped to exactly this
+    session's ingested videos — the Pinecone corpus is shared across every
+    session/user, so without this, "summarize compliance issues across all
+    videos" would retrieve every video anyone has ever ingested, not just the
+    ones this session added.
+
+    Only rebuilds when the session's video-ID set actually changed since the
+    last call (ingesting a video mid-session changes it); the prior executor's
+    memory is carried over into the new one so conversation history survives
+    the rebuild.
+    """
+    video_ids = tuple(v["video_id"] for v in st.session_state.ingested_videos)
+    if st.session_state.get("_agent_video_ids") != video_ids:
+        prior_memory = st.session_state.agent.memory if "agent" in st.session_state else None
+        st.session_state.agent = get_agent(
+            verbose=False, allowed_video_ids=list(video_ids), memory=prior_memory,
+        )
+        st.session_state._agent_video_ids = video_ids
+
+
 def _run_agent(prompt: str, status_placeholder=None) -> str:
     """Run the agent with knowledge base context injected."""
+    _ensure_scoped_agent()
     kb_context = ""
     if st.session_state.ingested_videos:
         lines = []

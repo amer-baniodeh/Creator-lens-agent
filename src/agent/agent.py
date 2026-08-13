@@ -1,8 +1,9 @@
 """
 agent.py
 --------
-Builds and returns the LangChain agent with all three tools and memory.
-Import `get_agent` and call it once per session.
+Builds and returns the LangChain agent with all four tools and memory.
+Import `get_agent` and call it once per session — and again, passing the prior
+executor's `.memory`, whenever `allowed_video_ids` needs to change mid-session.
 """
 
 from __future__ import annotations
@@ -12,7 +13,7 @@ from langchain_classic.memory import ConversationBufferMemory
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 
-from src.agent.tools import ALL_TOOLS
+from src.agent.tools import build_tools
 from src.utils.config import OPENAI_API_KEY, OPENAI_LLM_MODEL
 from src.utils.logger import logger
 
@@ -100,13 +101,26 @@ that only exists inside the video's own title or transcript.
 """.strip()
 
 
-def get_agent(verbose: bool = False) -> AgentExecutor:
+def get_agent(
+    verbose: bool = False,
+    allowed_video_ids: list[str] | None = None,
+    memory: ConversationBufferMemory | None = None,
+) -> AgentExecutor:
     """
-    Build and return a fresh AgentExecutor with memory.
-    Call once per session (e.g. once per Streamlit user session).
+    Build and return an AgentExecutor with memory.
 
     Args:
         verbose: If True, prints agent reasoning steps to stdout.
+        allowed_video_ids: restricts query_corpus/check_video_compliance to only
+            these video IDs — typically the current Streamlit session's own
+            ingested videos, since the Pinecone corpus is shared across all
+            sessions/users. None (the default) leaves them unscoped, for
+            callers (notebooks, scripts) that intentionally want the whole
+            corpus. See src/agent/tools.py:build_tools for details.
+        memory: an existing ConversationBufferMemory to reuse, e.g. when
+            rebuilding the executor mid-session as allowed_video_ids changes —
+            passing the prior executor's memory here preserves conversation
+            history across the rebuild. A fresh one is created if omitted.
 
     Returns:
         A LangChain AgentExecutor ready to accept .invoke() calls.
@@ -118,7 +132,7 @@ def get_agent(verbose: bool = False) -> AgentExecutor:
         streaming=False,
     )
 
-    memory = ConversationBufferMemory(
+    memory = memory or ConversationBufferMemory(
         memory_key="chat_history",
         return_messages=True,
     )
@@ -130,16 +144,22 @@ def get_agent(verbose: bool = False) -> AgentExecutor:
         MessagesPlaceholder(variable_name="agent_scratchpad"),
     ])
 
-    agent = create_openai_functions_agent(llm=llm, tools=ALL_TOOLS, prompt=prompt)
+    tools = build_tools(allowed_video_ids)
+    agent = create_openai_functions_agent(llm=llm, tools=tools, prompt=prompt)
 
     executor = AgentExecutor(
         agent=agent,
-        tools=ALL_TOOLS,
+        tools=tools,
         memory=memory,
         verbose=verbose,
         handle_parsing_errors=True,
         max_iterations=6,
     )
 
-    logger.info("Agent initialised with tools: " + ", ".join(t.name for t in ALL_TOOLS))
+    logger.info(
+        f"Agent initialised with tools: {', '.join(t.name for t in tools)} "
+        f"(scoped to {len(allowed_video_ids)} video(s))"
+        if allowed_video_ids is not None
+        else "Agent initialised with tools: " + ", ".join(t.name for t in tools) + " (unscoped)"
+    )
     return executor
