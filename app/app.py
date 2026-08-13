@@ -774,8 +774,11 @@ for msg in st.session_state.messages:
         else:
             st.markdown(msg["content"])
 
-# Suggested question chips
-if st.session_state.ingested_videos:
+# Suggested question chips — only before the user's first question, so they
+# don't linger as clutter once someone already knows how to use the chat.
+if st.session_state.ingested_videos and not any(
+    m["role"] == "user" for m in st.session_state.messages
+):
     st.markdown('<div class="suggested-label">Try asking</div>', unsafe_allow_html=True)
     cols = st.columns(len(SUGGESTED_QUESTIONS))
     for col, question in zip(cols, SUGGESTED_QUESTIONS):
