@@ -85,6 +85,18 @@ st.markdown(
     .app-title { font-size: 22px; font-weight: 700; color: var(--ink); letter-spacing: -0.3px; }
     .app-subtitle { font-size: 13px; color: var(--ink-soft); margin-top: 2px; }
 
+    /* AI-disclosure notice (EU AI Act Art. 50 — users must know they're
+       talking to an AI system) — persistent, not a dismissible toast. */
+    .ai-disclosure {
+      font-size: 12px;
+      color: var(--ink-soft);
+      background: var(--paper-raised);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 8px 12px;
+      margin-bottom: 16px;
+    }
+
     /* Sidebar status dashboard */
     .status-pill { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--ink-soft); margin-bottom: 12px; }
     .status-pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--compliant); box-shadow: 0 0 0 3px var(--compliant-soft); flex-shrink: 0; }
@@ -733,6 +745,12 @@ st.markdown(
       </div>
     </div>
     """,
+    unsafe_allow_html=True,
+)
+
+st.markdown(
+    '<div class="ai-disclosure">🤖 You\'re chatting with an AI assistant, not a human. '
+    "Verify compliance findings independently before acting on them.</div>",
     unsafe_allow_html=True,
 )
 
