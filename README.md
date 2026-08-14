@@ -70,3 +70,7 @@ Full numbers and methodology in `data/eval/SUMMARY.md`, `data/eval/RAG_SUMMARY.m
 
 See [docs/architecture.md](docs/architecture.md) for the system design and
 [docs/PROJECT_LOG.md](docs/PROJECT_LOG.md) for how it got built.
+
+## Developer
+
+Amer Baniodeh
